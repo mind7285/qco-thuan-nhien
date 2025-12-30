@@ -10,7 +10,7 @@ CREATE TABLE qtb_role (
     role_name VARCHAR(128) NOT NULL,
     role_code VARCHAR(64) UNIQUE NOT NULL,
     
-    -- M_Data_Entity common fields
+    -- M_Db_Ett common fields
     q_status INT DEFAULT 1,
     q_version INT DEFAULT 0,
     q_is_deleted BOOLEAN DEFAULT FALSE,
@@ -35,7 +35,7 @@ CREATE TABLE qtb_usr (
     email VARCHAR(128) UNIQUE,
     phone VARCHAR(32),
     
-    -- M_Data_Entity common fields
+    -- M_Db_Ett common fields
     q_status INT DEFAULT 1,
     q_version INT DEFAULT 0,
     q_is_deleted BOOLEAN DEFAULT FALSE,
@@ -57,7 +57,7 @@ CREATE TABLE qtb_usr_role (
     role_id UUID NOT NULL REFERENCES qtb_role(q_id),
     PRIMARY KEY (usr_id, role_id),
     
-    -- M_Data_Entity common fields
+    -- M_Db_Ett common fields
     q_status INT DEFAULT 1,
     q_version INT DEFAULT 0,
     q_is_deleted BOOLEAN DEFAULT FALSE,
@@ -81,7 +81,7 @@ CREATE TABLE qtb_usr_ses (
     expired_at BIGINT NOT NULL,
     login_ip VARCHAR(64),
     
-    -- M_Data_Entity common fields
+    -- M_Db_Ett common fields
     q_status INT DEFAULT 1,
     q_version INT DEFAULT 0,
     q_is_deleted BOOLEAN DEFAULT FALSE,
@@ -103,7 +103,7 @@ CREATE TABLE qtb_mod (
     mod_name VARCHAR(128) NOT NULL,
     mod_code VARCHAR(64) UNIQUE NOT NULL,
     
-    -- M_Data_Entity common fields
+    -- M_Db_Ett common fields
     q_status INT DEFAULT 1,
     q_version INT DEFAULT 0,
     q_is_deleted BOOLEAN DEFAULT FALSE,
@@ -125,7 +125,7 @@ CREATE TABLE qtb_perm (
     perm_name VARCHAR(128) NOT NULL,
     perm_code VARCHAR(64) UNIQUE NOT NULL,
     
-    -- M_Data_Entity common fields
+    -- M_Db_Ett common fields
     q_status INT DEFAULT 1,
     q_version INT DEFAULT 0,
     q_is_deleted BOOLEAN DEFAULT FALSE,
@@ -148,7 +148,7 @@ CREATE TABLE qtb_role_perm (
     perm_id UUID NOT NULL REFERENCES qtb_perm(q_id),
     PRIMARY KEY (role_id, mod_id, perm_id),
     
-    -- M_Data_Entity common fields
+    -- M_Db_Ett common fields
     q_status INT DEFAULT 1,
     q_version INT DEFAULT 0,
     q_is_deleted BOOLEAN DEFAULT FALSE,
