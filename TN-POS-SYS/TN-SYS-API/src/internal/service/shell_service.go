@@ -28,10 +28,7 @@ func NewShellService(db *gorm.DB) *S_Api_Shell {
 func (s *S_Api_Shell) GetRegistry() ([]shell.M_Tb_Shell_Mod, error) {
 	var modules []shell.M_Tb_Shell_Mod
 
-	err := s.db.
-		Where("q_is_deleted = ? AND q_status = ?", false, 1).
-		Order("c_order ASC").
-		Find(&modules).Error
+	err := s.db.Raw("SELECT * FROM shell.qfn_shell_mod_get_registry()").Find(&modules).Error
 
 	if err != nil {
 		s.logger.Error("Failed to get registry", zap.Error(err))

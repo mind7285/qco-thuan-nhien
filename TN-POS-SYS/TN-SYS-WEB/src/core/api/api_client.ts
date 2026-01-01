@@ -6,7 +6,18 @@ export class Api_Client {
   private baseUrl: string;
 
   constructor(baseUrl?: string) {
-    this.baseUrl = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+    // 🇻🇳 Sử dụng proxy trong development hoặc baseUrl được cung cấp
+    // 🇺🇸 Use proxy in development or provided baseUrl
+    if (baseUrl) {
+      this.baseUrl = baseUrl;
+    } else if (typeof window !== 'undefined') {
+      // Trong development, sử dụng proxy /api
+      // In production, có thể cấu hình qua environment variable
+      const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
+      this.baseUrl = apiBase.startsWith('http') ? apiBase : `${window.location.origin}${apiBase}`;
+    } else {
+      this.baseUrl = '';
+    }
   }
 
   // 🇻🇳 Gửi request GET

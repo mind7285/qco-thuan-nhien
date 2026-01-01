@@ -10,7 +10,7 @@ CREATE SCHEMA IF NOT EXISTS shell;
 -- ---------------------------------------------------------
 
 -- Mapping: 🦋 M_Tb_Shell_Mod -> 🗄️ shell.qtb_shell_mod
-CREATE TABLE shell.qtb_shell_mod (
+CREATE TABLE IF NOT EXISTS shell.qtb_shell_mod (
     -- From M_Db_Ett (không có q_id vì c_mod_id là primary key)
     c_mod_id VARCHAR(64) PRIMARY KEY,
     
@@ -38,7 +38,7 @@ CREATE TABLE shell.qtb_shell_mod (
 );
 
 -- Index for ordering
-CREATE INDEX idx_shell_mod_order ON shell.qtb_shell_mod(c_order) WHERE q_is_deleted = FALSE;
+CREATE INDEX IF NOT EXISTS idx_shell_mod_order ON shell.qtb_shell_mod(c_order) WHERE q_is_deleted = FALSE;
 
 -- ---------------------------------------------------------
 -- 2. FUNCTIONS
@@ -62,6 +62,7 @@ $$ LANGUAGE plpgsql;
 -- ---------------------------------------------------------
 
 -- Enable audit trigger for shell.qtb_shell_mod
+DROP TRIGGER IF EXISTS trg_shell_mod_audit ON shell.qtb_shell_mod;
 CREATE TRIGGER trg_shell_mod_audit
     AFTER INSERT OR UPDATE OR DELETE ON shell.qtb_shell_mod
     FOR EACH ROW

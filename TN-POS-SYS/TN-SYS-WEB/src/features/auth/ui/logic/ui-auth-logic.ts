@@ -18,15 +18,15 @@ export class Ui_Auth_Logic {
     }
 
     // 💫 2. Gọi API login
-    const user = await this.authService.login(usrName, pwd);
+    const result = await this.authService.login(usrName, pwd);
 
     // 💫 3. Lưu token và user data
     if (typeof window !== 'undefined') {
-      // TODO: Lưu session token từ response
-      localStorage.setItem('user_data', JSON.stringify(user));
+      localStorage.setItem('auth_token', result.token);
+      localStorage.setItem('user_data', JSON.stringify(result.user));
     }
 
-    return user;
+    return result.user;
   }
 
   // ⚡️ Xử lý đăng ký
@@ -61,7 +61,12 @@ export class Ui_Auth_Logic {
   // ⚡️ Xử lý điều hướng
   navigateTo(path: string): void {
     if (typeof window !== 'undefined') {
-      window.location.href = path;
+      const router = (window as any).router;
+      if (router) {
+        router.navigate(path);
+      } else {
+        window.location.href = path;
+      }
     }
   }
 }

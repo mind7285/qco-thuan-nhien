@@ -10,7 +10,7 @@ CREATE SCHEMA IF NOT EXISTS auth;
 -- ---------------------------------------------------------
 
 -- Mapping: 🦋 M_Tb_Role -> 🗄️ auth.qtb_role
-CREATE TABLE auth.qtb_role (
+CREATE TABLE IF NOT EXISTS auth.qtb_role (
     -- From M_Db_Guid_Itm
     q_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
@@ -36,7 +36,7 @@ CREATE TABLE auth.qtb_role (
 );
 
 -- Mapping: 🦋 M_Tb_Usr -> 🗄️ auth.qtb_usr
-CREATE TABLE auth.qtb_usr (
+CREATE TABLE IF NOT EXISTS auth.qtb_usr (
     -- From M_Db_Guid_Itm
     q_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
@@ -65,7 +65,7 @@ CREATE TABLE auth.qtb_usr (
 );
 
 -- Mapping: 🦋 M_Tb_Usr_Role 🕰️ -> 🗄️ auth.qtb_usr_role
-CREATE TABLE auth.qtb_usr_role (
+CREATE TABLE IF NOT EXISTS auth.qtb_usr_role (
     c_usr_id UUID NOT NULL REFERENCES auth.qtb_usr(q_id),
     c_role_id UUID NOT NULL REFERENCES auth.qtb_role(q_id),
     PRIMARY KEY (c_usr_id, c_role_id),
@@ -88,7 +88,7 @@ CREATE TABLE auth.qtb_usr_role (
 );
 
 -- History Table for M_Tb_Usr_Role
-CREATE TABLE auth.qtb_usr_role_his (
+CREATE TABLE IF NOT EXISTS auth.qtb_usr_role_his (
     c_usr_id UUID,
     c_role_id UUID,
     q_status INT,
@@ -109,7 +109,7 @@ CREATE TABLE auth.qtb_usr_role_his (
 );
 
 -- Mapping: 🦋 M_Tb_Usr_Ses -> 🗄️ auth.qtb_usr_ses
-CREATE TABLE auth.qtb_usr_ses (
+CREATE TABLE IF NOT EXISTS auth.qtb_usr_ses (
     -- From M_Db_Guid_Itm
     q_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
@@ -137,7 +137,7 @@ CREATE TABLE auth.qtb_usr_ses (
 );
 
 -- Mapping: 🦋 M_Tb_Mod -> 🗄️ auth.qtb_mod
-CREATE TABLE auth.qtb_mod (
+CREATE TABLE IF NOT EXISTS auth.qtb_mod (
     -- From M_Db_Guid_Itm
     q_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
@@ -163,7 +163,7 @@ CREATE TABLE auth.qtb_mod (
 );
 
 -- Mapping: 🦋 M_Tb_Perm -> 🗄️ auth.qtb_perm
-CREATE TABLE auth.qtb_perm (
+CREATE TABLE IF NOT EXISTS auth.qtb_perm (
     -- From M_Db_Guid_Itm
     q_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
@@ -189,7 +189,7 @@ CREATE TABLE auth.qtb_perm (
 );
 
 -- Mapping: 🦋 M_Tb_Role_Perm 🕰️ -> 🗄️ auth.qtb_role_perm
-CREATE TABLE auth.qtb_role_perm (
+CREATE TABLE IF NOT EXISTS auth.qtb_role_perm (
     c_role_id UUID NOT NULL REFERENCES auth.qtb_role(q_id),
     c_mod_id UUID NOT NULL REFERENCES auth.qtb_mod(q_id),
     c_perm_id UUID NOT NULL REFERENCES auth.qtb_perm(q_id),
@@ -213,7 +213,7 @@ CREATE TABLE auth.qtb_role_perm (
 );
 
 -- History Table for M_Tb_Role_Perm
-CREATE TABLE auth.qtb_role_perm_his (
+CREATE TABLE IF NOT EXISTS auth.qtb_role_perm_his (
     c_role_id UUID,
     c_mod_id UUID,
     c_perm_id UUID,
@@ -235,7 +235,7 @@ CREATE TABLE auth.qtb_role_perm_his (
 );
 
 -- Mapping: 🦋 M_Tb_Usr_Otp -> 🗄️ auth.qtb_usr_otp
-CREATE TABLE auth.qtb_usr_otp (
+CREATE TABLE IF NOT EXISTS auth.qtb_usr_otp (
     -- From M_Db_Guid_Itm
     q_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
@@ -315,6 +315,78 @@ BEGIN
     INSERT INTO auth.qtb_usr_ses (c_usr_id, c_ses_token, c_expired_at, c_login_ip, q_created_via)
     VALUES (v_usr_id, v_ses_token, v_expired_at, p_login_ip, 'SP_Usr_Login')
     RETURNING *;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Mapping: 💾 SP_Usr_Ses_Create() -> auth.qsp_usr_ses_create
+CREATE OR REPLACE FUNCTION auth.qsp_usr_ses_create(
+    p_usr_id UUID,
+    p_login_ip VARCHAR
+) RETURNS SETOF auth.qtb_usr_ses AS $$
+DECLARE
+    v_ses_token VARCHAR(256);
+    v_expired_at BIGINT;
+    v_created_at BIGINT;
+    v_usr_exists BOOLEAN;
+BEGIN
+    -- 1. Kiểm tra user tồn tại và chưa bị xóa
+    SELECT EXISTS(
+        SELECT 1 FROM auth.qtb_usr 
+        WHERE q_id = p_usr_id 
+          AND q_is_deleted = FALSE
+    ) INTO v_usr_exists;
+    
+    IF NOT v_usr_exists THEN
+        RAISE EXCEPTION 'User not found or deleted';
+    END IF;
+    
+    -- 2. Generate session token (64 hex characters = 32 bytes)
+    v_ses_token := encode(gen_random_bytes(32), 'hex');
+    
+    -- 3. Calculate expired_at (24 hours from now)
+    v_expired_at := (extract(epoch from now()) * 1000)::BIGINT + (24 * 60 * 60 * 1000);
+    
+    -- 4. Get current timestamp
+    v_created_at := (extract(epoch from now()) * 1000)::BIGINT;
+    
+    -- 5. Insert session
+    RETURN QUERY
+    INSERT INTO auth.qtb_usr_ses (
+        c_usr_id, 
+        c_ses_token, 
+        c_expired_at, 
+        c_login_ip, 
+        q_created_via, 
+        q_created_at, 
+        q_status, 
+        q_is_deleted
+    )
+    VALUES (
+        p_usr_id, 
+        v_ses_token, 
+        v_expired_at, 
+        NULLIF(p_login_ip, ''),  -- NULL if empty string
+        'API_Login', 
+        v_created_at, 
+        1,  -- Active
+        FALSE
+    )
+    RETURNING *;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Mapping: 🏝️ Fn_Usr_Ses_Verify() -> auth.qfn_usr_ses_verify
+CREATE OR REPLACE FUNCTION auth.qfn_usr_ses_verify(
+    p_ses_token VARCHAR
+) RETURNS SETOF auth.qtb_usr_ses AS $$
+BEGIN
+    RETURN QUERY
+    SELECT *
+    FROM auth.qtb_usr_ses
+    WHERE c_ses_token = p_ses_token
+      AND c_expired_at > (extract(epoch from now()) * 1000)::BIGINT
+      AND q_is_deleted = FALSE
+    LIMIT 1;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -448,6 +520,48 @@ BEGIN
     FROM auth.qtb_usr
     WHERE q_is_deleted = FALSE
     ORDER BY c_full_name ASC;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Mapping: 🏝️ Fn_Auth_Usr_Get_By_Name() -> auth.qfn_usr_get_by_name
+CREATE OR REPLACE FUNCTION auth.qfn_usr_get_by_name(
+    p_usr_name VARCHAR
+) RETURNS SETOF auth.qtb_usr AS $$
+BEGIN
+    RETURN QUERY
+    SELECT *
+    FROM auth.qtb_usr
+    WHERE c_usr_name = p_usr_name
+      AND q_is_deleted = FALSE
+    LIMIT 1;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Mapping: 🏝️ Fn_Auth_Usr_Get_By_Email() -> auth.qfn_usr_get_by_email
+CREATE OR REPLACE FUNCTION auth.qfn_usr_get_by_email(
+    p_email VARCHAR
+) RETURNS SETOF auth.qtb_usr AS $$
+BEGIN
+    RETURN QUERY
+    SELECT *
+    FROM auth.qtb_usr
+    WHERE c_email = p_email
+      AND q_is_deleted = FALSE
+    LIMIT 1;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Mapping: 🏝️ Fn_Auth_Usr_Get_By_Id() -> auth.qfn_usr_get_by_id
+CREATE OR REPLACE FUNCTION auth.qfn_usr_get_by_id(
+    p_usr_id UUID
+) RETURNS SETOF auth.qtb_usr AS $$
+BEGIN
+    RETURN QUERY
+    SELECT *
+    FROM auth.qtb_usr
+    WHERE q_id = p_usr_id
+      AND q_is_deleted = FALSE
+    LIMIT 1;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -612,41 +726,49 @@ $$ LANGUAGE plpgsql;
 -- ---------------------------------------------------------
 
 -- Enable audit triggers for all auth tables
+DROP TRIGGER IF EXISTS trg_auth_role_audit ON auth.qtb_role;
 CREATE TRIGGER trg_auth_role_audit
     AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_role
     FOR EACH ROW
     EXECUTE FUNCTION core.qfn_audit_trigger();
 
+DROP TRIGGER IF EXISTS trg_auth_usr_audit ON auth.qtb_usr;
 CREATE TRIGGER trg_auth_usr_audit
     AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_usr
     FOR EACH ROW
     EXECUTE FUNCTION core.qfn_audit_trigger();
 
+DROP TRIGGER IF EXISTS trg_auth_usr_role_audit ON auth.qtb_usr_role;
 CREATE TRIGGER trg_auth_usr_role_audit
     AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_usr_role
     FOR EACH ROW
     EXECUTE FUNCTION core.qfn_audit_trigger();
 
+DROP TRIGGER IF EXISTS trg_auth_usr_ses_audit ON auth.qtb_usr_ses;
 CREATE TRIGGER trg_auth_usr_ses_audit
     AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_usr_ses
     FOR EACH ROW
     EXECUTE FUNCTION core.qfn_audit_trigger();
 
+DROP TRIGGER IF EXISTS trg_auth_mod_audit ON auth.qtb_mod;
 CREATE TRIGGER trg_auth_mod_audit
     AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_mod
     FOR EACH ROW
     EXECUTE FUNCTION core.qfn_audit_trigger();
 
+DROP TRIGGER IF EXISTS trg_auth_perm_audit ON auth.qtb_perm;
 CREATE TRIGGER trg_auth_perm_audit
     AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_perm
     FOR EACH ROW
     EXECUTE FUNCTION core.qfn_audit_trigger();
 
+DROP TRIGGER IF EXISTS trg_auth_role_perm_audit ON auth.qtb_role_perm;
 CREATE TRIGGER trg_auth_role_perm_audit
     AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_role_perm
     FOR EACH ROW
     EXECUTE FUNCTION core.qfn_audit_trigger();
 
+DROP TRIGGER IF EXISTS trg_auth_usr_otp_audit ON auth.qtb_usr_otp;
 CREATE TRIGGER trg_auth_usr_otp_audit
     AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_usr_otp
     FOR EACH ROW

@@ -5,6 +5,7 @@ CREATE SCHEMA IF NOT EXISTS core;
 -- Lưu ý: Extensions phải ở schema public, không thể di chuyển vào schema khác
 CREATE EXTENSION IF NOT EXISTS unaccent;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;  -- Cho gen_random_bytes() và encode()
 
 -- 3. Hàm qfn_get_initials: Lấy các chữ cái đầu và dãy phụ âm
 -- Phục vụ cho cột q_search_shorthand (Shorthand Search)
@@ -119,33 +120,77 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
+-- 8.1. Hàm helper: Lấy record_id từ row (tự động detect primary key)
+CREATE OR REPLACE FUNCTION core.qfn_get_record_id(p_row jsonb, p_table_oid oid) 
+RETURNS text AS $$
+DECLARE
+    v_record_id text;
+    v_pk_attname text;
+BEGIN
+    -- Ưu tiên 1: Thử lấy q_id (nếu có)
+    IF (p_row ? 'q_id') THEN
+        RETURN (p_row->>'q_id');
+    END IF;
+    
+    -- Ưu tiên 2: Lấy primary key đầu tiên
+    SELECT a.attname INTO v_pk_attname
+    FROM pg_index i
+    JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+    WHERE i.indrelid = p_table_oid AND i.indisprimary
+    ORDER BY a.attnum
+    LIMIT 1;
+    
+    IF v_pk_attname IS NOT NULL AND (p_row ? v_pk_attname) THEN
+        RETURN (p_row->>v_pk_attname);
+    END IF;
+    
+    -- Fallback: Dùng hash của toàn bộ row
+    RETURN md5(p_row::text);
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
 -- 8. Hàm Trigger dùng chung cho mọi bảng
 CREATE OR REPLACE FUNCTION core.qfn_audit_trigger() 
 RETURNS TRIGGER AS $$
 DECLARE
     v_user_id text;
     v_diff jsonb;
+    v_record_id text;
+    v_row_json jsonb;
 BEGIN
     -- Lấy user_id từ session (Backend nên chạy: SET app.user_id = '...')
-    v_user_id := current_setting('app.user_id', true);
+    BEGIN
+        v_user_id := current_setting('app.user_id', true);
+    EXCEPTION WHEN OTHERS THEN
+        v_user_id := NULL;
+    END;
 
     IF (TG_OP = 'DELETE') THEN
+        v_row_json := row_to_json(OLD)::jsonb;
+        v_record_id := core.qfn_get_record_id(v_row_json, TG_RELID);
+        
         INSERT INTO core.qtb_audit_log(q_table_name, q_record_id, q_action, q_old_data, q_changed_by)
-        VALUES (TG_TABLE_NAME, OLD.q_id::text, 'DEL', row_to_json(OLD)::jsonb, v_user_id);
+        VALUES (TG_TABLE_NAME, v_record_id, 'DEL', v_row_json, v_user_id);
         RETURN OLD;
     ELSIF (TG_OP = 'UPDATE') THEN
+        v_row_json := row_to_json(NEW)::jsonb;
+        v_record_id := core.qfn_get_record_id(v_row_json, TG_RELID);
+        
         -- Chỉ lấy các field có sự thay đổi
-        v_diff := core.qfn_jsonb_diff(row_to_json(OLD)::jsonb, row_to_json(NEW)::jsonb);
+        v_diff := core.qfn_jsonb_diff(row_to_json(OLD)::jsonb, v_row_json);
         
         -- Chỉ insert nếu thực sự có sự thay đổi dữ liệu (tránh log rác)
         IF (v_diff <> '{}'::jsonb) THEN
             INSERT INTO core.qtb_audit_log(q_table_name, q_record_id, q_action, q_old_data, q_new_data, q_changed_data, q_changed_by)
-            VALUES (TG_TABLE_NAME, NEW.q_id::text, 'UPD', row_to_json(OLD)::jsonb, row_to_json(NEW)::jsonb, v_diff, v_user_id);
+            VALUES (TG_TABLE_NAME, v_record_id, 'UPD', row_to_json(OLD)::jsonb, v_row_json, v_diff, v_user_id);
         END IF;
         RETURN NEW;
     ELSIF (TG_OP = 'INSERT') THEN
+        v_row_json := row_to_json(NEW)::jsonb;
+        v_record_id := core.qfn_get_record_id(v_row_json, TG_RELID);
+        
         INSERT INTO core.qtb_audit_log(q_table_name, q_record_id, q_action, q_new_data, q_changed_by)
-        VALUES (TG_TABLE_NAME, NEW.q_id::text, 'INS', row_to_json(NEW)::jsonb, v_user_id);
+        VALUES (TG_TABLE_NAME, v_record_id, 'INS', v_row_json, v_user_id);
         RETURN NEW;
     END IF;
     RETURN NULL;

@@ -30,12 +30,12 @@ func NewAuthService(db *gorm.DB) *S_Api_Auth {
 // pwd: mật khẩu plain text
 // loginIP: IP đăng nhập
 func (s *S_Api_Auth) Login(usrName, pwd, loginIP string) (*auth.M_Tb_Auth_Usr_Ses, *auth.M_Tb_Auth_Usr, error) {
-	// 1. Lấy user từ database
+	// 1. Lấy user từ database bằng function
 	var usr auth.M_Tb_Auth_Usr
 	err := s.db.Raw(
-		"SELECT * FROM auth.qtb_usr WHERE c_usr_name = $1 AND q_is_deleted = $2 LIMIT 1",
-		usrName, false,
-	).Scan(&usr).Error
+		"SELECT * FROM auth.qfn_usr_get_by_name($1)",
+		usrName,
+	).First(&usr).Error
 	if err != nil {
 		s.logger.Error("User not found",
 			zap.String("usrName", usrName),
@@ -87,68 +87,50 @@ func (s *S_Api_Auth) Login(usrName, pwd, loginIP string) (*auth.M_Tb_Auth_Usr_Se
 
 	s.logger.Info("Password verified successfully", zap.String("usrID", usr.QID))
 
-	// 3. Tạo session token (64 hex characters = 32 bytes)
-	sesToken := utils.GenerateRandomToken(32)
-
-	// 4. Tính expired_at (24 giờ từ bây giờ)
-	expiredAt := utils.GetCurrentTimeMs() + (24 * 60 * 60 * 1000)
-
-	// 5. Tạo session trong database
-	createdAt := utils.GetCurrentTimeMs()
-
-	// Xử lý loginIP (có thể NULL)
-	var loginIPPtr interface{}
-	if loginIP != "" {
-		loginIPPtr = loginIP
-	} else {
-		loginIPPtr = nil
-	}
-
-	s.logger.Info("Creating session",
+	// 3. Tạo session bằng stored procedure
+	s.logger.Info("Creating session via SP",
 		zap.String("usrID", usr.QID),
-		zap.String("sesToken", sesToken[:16]+"..."),
-		zap.Int64("expiredAt", expiredAt),
-		zap.Int64("createdAt", createdAt),
 		zap.String("loginIP", loginIP),
 	)
 
-	// Dùng Raw SQL để insert session
-	var sesID string
-	err = s.db.Raw(
-		`INSERT INTO auth.qtb_usr_ses 
-		 (c_usr_id, c_ses_token, c_expired_at, c_login_ip, q_created_via, q_created_at, q_status, q_is_deleted)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		 RETURNING q_id`,
-		usr.QID, sesToken, expiredAt, loginIPPtr, "API_Login", createdAt, 1, false,
-	).Scan(&sesID).Error
+	// SP trả về SETOF (table), dùng Scan() để lấy kết quả
+	// Lưu ý: GORM với SETOF function cần dùng Scan() thay vì First()
+	var ses auth.M_Tb_Auth_Usr_Ses
+	rows, err := s.db.Raw(
+		"SELECT * FROM auth.qsp_usr_ses_create($1, $2)",
+		usr.QID, loginIP,
+	).Rows()
 
 	if err != nil {
-		s.logger.Error("Failed to create session",
+		s.logger.Error("Failed to execute session SP",
 			zap.String("usrID", usr.QID),
-			zap.String("sesToken", sesToken[:16]+"..."),
+			zap.String("loginIP", loginIP),
+			zap.Error(err),
+		)
+		return nil, nil, errors.New("Failed to create session")
+	}
+	defer rows.Close()
+
+	// Scan kết quả từ SETOF
+	if !rows.Next() {
+		s.logger.Error("No session returned from SP",
+			zap.String("usrID", usr.QID),
+		)
+		return nil, nil, errors.New("Failed to create session")
+	}
+
+	if err := s.db.ScanRows(rows, &ses); err != nil {
+		s.logger.Error("Failed to scan session result",
+			zap.String("usrID", usr.QID),
 			zap.Error(err),
 		)
 		return nil, nil, errors.New("Failed to create session")
 	}
 
-	// Lấy lại session vừa tạo
-	var ses auth.M_Tb_Auth_Usr_Ses
-	err = s.db.Raw(
-		"SELECT * FROM auth.qtb_usr_ses WHERE q_id = $1",
-		sesID,
-	).Scan(&ses).Error
-
-	if err != nil {
-		s.logger.Error("Failed to retrieve created session",
-			zap.String("sesID", sesID),
-			zap.Error(err),
-		)
-		return nil, nil, errors.New("Failed to retrieve session")
-	}
-
 	s.logger.Info("Session created successfully",
 		zap.String("usrID", usr.QID),
-		zap.String("sesToken", sesToken[:16]+"..."),
+		zap.String("sesID", ses.QID),
+		zap.String("sesToken", ses.CSesToken[:16]+"..."),
 	)
 
 	return &ses, &usr, nil
@@ -159,7 +141,7 @@ func (s *S_Api_Auth) Logout(sesToken string) (bool, error) {
 	var result bool
 
 	err := s.db.Raw(
-		"SELECT auth.qsp_usr_logout(?)",
+		"SELECT auth.qsp_usr_logout($1)",
 		sesToken,
 	).Scan(&result).Error
 
@@ -198,9 +180,12 @@ func (s *S_Api_Auth) Register(usr *auth.M_Tb_Auth_Usr) (string, error) {
 
 // ForgotPwd Quên mật khẩu
 func (s *S_Api_Auth) ForgotPwd(email string) (bool, error) {
-	// Tìm user theo email
+	// Tìm user theo email bằng function
 	var usr auth.M_Tb_Auth_Usr
-	err := s.db.Where("c_email = ? AND q_is_deleted = ?", email, false).First(&usr).Error
+	err := s.db.Raw(
+		"SELECT * FROM auth.qfn_usr_get_by_email($1)",
+		email,
+	).First(&usr).Error
 
 	if err != nil {
 		// Luôn trả về true để bảo mật
@@ -209,10 +194,11 @@ func (s *S_Api_Auth) ForgotPwd(email string) (bool, error) {
 
 	// Tạo OTP (giả sử đã có OTP code)
 	otpCode := "123456" // TODO: Generate OTP
-	err = s.db.Exec(
+	var result bool
+	err = s.db.Raw(
 		"SELECT auth.qsp_usr_otp_create($1, $2)",
 		usr.QID, otpCode,
-	).Error
+	).Scan(&result).Error
 
 	if err != nil {
 		s.logger.Error("Failed to create OTP", zap.Error(err))
@@ -227,9 +213,12 @@ func (s *S_Api_Auth) ForgotPwd(email string) (bool, error) {
 // oldPwd: mật khẩu cũ (plain text)
 // newPwd: mật khẩu mới (plain text)
 func (s *S_Api_Auth) ChangePwd(usrID, oldPwd, newPwd string) (bool, error) {
-	// Lấy user để lấy hash mật khẩu hiện tại
+	// Lấy user để lấy hash mật khẩu hiện tại bằng function
 	var usr auth.M_Tb_Auth_Usr
-	err := s.db.Where("q_id = ?", usrID).First(&usr).Error
+	err := s.db.Raw(
+		"SELECT * FROM auth.qfn_usr_get_by_id($1)",
+		usrID,
+	).First(&usr).Error
 	if err != nil {
 		s.logger.Error("User not found", zap.Error(err))
 		return false, errors.New("User not found")

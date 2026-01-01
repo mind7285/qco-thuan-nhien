@@ -93,6 +93,20 @@ export class UiShellScn extends LitElement {
   protected async firstUpdated(_changedProperties: PropertyValues): Promise<void> {
     super.firstUpdated(_changedProperties);
     await this._loadModules();
+    this._updateCurrentModuleFromUrl();
+    
+    // Listen to URL changes
+    window.addEventListener('popstate', () => {
+      this._updateCurrentModuleFromUrl();
+    });
+  }
+
+  protected updated(_changedProperties: PropertyValues): void {
+    super.updated(_changedProperties);
+    // Update current module when URL changes
+    if (_changedProperties.has('modules')) {
+      this._updateCurrentModuleFromUrl();
+    }
   }
 
   // ⚡️ Load modules from registry
@@ -125,6 +139,7 @@ export class UiShellScn extends LitElement {
           <div class="sidebar-container ${this.isSidebarOpen ? '' : 'closed'}">
             <ui-shell-sidebar-wgt
               .modules="${this.modules}"
+              .currentModule="${this.currentModule}"
               @mod-click="${this._onModClick}"
             ></ui-shell-sidebar-wgt>
           </div>
@@ -153,6 +168,15 @@ export class UiShellScn extends LitElement {
   private _getCurrentModuleTitle(): string {
     const module = this.modules.find((m) => m.c_mod_id === this.currentModule);
     return module?.c_title || 'POS System';
+  }
+
+  // 💎 Update current module from URL
+  private _updateCurrentModuleFromUrl(): void {
+    const path = window.location.pathname;
+    const module = this.modules.find((m) => path.startsWith(m.c_route));
+    if (module) {
+      this.currentModule = module.c_mod_id;
+    }
   }
 }
 

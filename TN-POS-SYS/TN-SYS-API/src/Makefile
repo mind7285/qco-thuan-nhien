@@ -1,7 +1,7 @@
 # 🇻🇳 Makefile cho TN POS System API
 # 🇺🇸 Makefile for TN POS System API
 
-.PHONY: run build clean test deps
+.PHONY: run build clean test deps watch dev
 
 # Default target
 .DEFAULT_GOAL := run
@@ -10,6 +10,41 @@
 run:
 	@echo "🚀 Starting API server..."
 	@go run cmd/server/main.go
+
+# Run server with hot reload (requires air: go install github.com/air-verse/air@latest)
+watch:
+	@echo "🔥 Starting API server with hot reload..."
+	@GOPATH_BIN=$$(go env GOPATH)/bin; \
+	AIR_BIN="$$GOPATH_BIN/air"; \
+	if [ -f "$$AIR_BIN" ]; then \
+		$$AIR_BIN; \
+	elif command -v air > /dev/null 2>&1; then \
+		air; \
+	else \
+		echo "❌ Air not found. Install it with: go install github.com/air-verse/air@latest"; \
+		echo "   Or use 'make dev' to install and run"; \
+		exit 1; \
+	fi
+
+# Install air and run with hot reload
+dev:
+	@echo "📦 Installing air (if not installed)..."
+	@go install github.com/air-verse/air@latest || true
+	@echo "🔥 Starting API server with hot reload..."
+	@GOPATH_BIN=$$(go env GOPATH)/bin; \
+	AIR_BIN="$$GOPATH_BIN/air"; \
+	if [ -f "$$AIR_BIN" ]; then \
+		echo "✅ Found air at: $$AIR_BIN"; \
+		$$AIR_BIN; \
+	elif command -v air > /dev/null 2>&1; then \
+		echo "✅ Found air in PATH"; \
+		air; \
+	else \
+		echo "❌ Air binary not found at: $$AIR_BIN"; \
+		echo "   Please check your GOPATH: $$(go env GOPATH)"; \
+		echo "   Or add GOPATH/bin to your PATH: export PATH=\$$PATH:$$GOPATH_BIN"; \
+		exit 1; \
+	fi
 
 # Build binary
 build:

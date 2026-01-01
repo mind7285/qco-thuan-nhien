@@ -57,9 +57,30 @@ go build -o bin/server cmd/server/main.go
 ./bin/server
 ```
 
-### Cách 3: Sử dụng Makefile (nếu có)
+### Cách 3: Sử dụng Makefile
 ```bash
+cd src
 make run
+```
+
+### Cách 4: Hot Reload (Tự động reload khi code thay đổi) 🔥
+```bash
+cd src
+make dev
+# Hoặc nếu đã cài air:
+make watch
+```
+
+**Lưu ý:** Lần đầu chạy `make dev` sẽ tự động cài đặt `air`. Nếu muốn cài thủ công:
+```bash
+go install github.com/air-verse/air@latest
+```
+
+Sau đó chạy:
+```bash
+make watch
+# hoặc
+air
 ```
 
 ## Kiểm tra

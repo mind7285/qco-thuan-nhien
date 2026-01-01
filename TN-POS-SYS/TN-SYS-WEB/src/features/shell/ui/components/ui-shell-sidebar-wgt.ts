@@ -9,6 +9,9 @@ import type { M_Tb_Shell_Mod } from '../../data/models';
 export class UiShellSidebarWgt extends LitElement {
   // 🍃 Danh sách module từ Registry
   @property({ type: Array }) modules: M_Tb_Shell_Mod[] = [];
+  
+  // 🍃 Module đang được chọn
+  @property({ type: String }) currentModule: string = '';
 
   // 🎨 Styles
   static styles = css`
@@ -57,7 +60,7 @@ export class UiShellSidebarWgt extends LitElement {
           (mod) => mod.c_mod_id,
           (mod) => html`
             <div
-              class="module-item"
+              class="module-item ${mod.c_mod_id === this.currentModule ? 'active' : ''}"
               @click="${() => this._onModClick(mod.c_mod_id)}"
             >
               <span class="module-icon">${mod.c_icon || '📦'}</span>

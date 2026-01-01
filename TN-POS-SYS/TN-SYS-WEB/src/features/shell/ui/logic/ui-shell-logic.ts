@@ -17,9 +17,13 @@ export class Ui_Shell_Logic {
     // 💫 2. Điều hướng tới đường dẫn của module
     const module = this.host.modules.find((m) => m.c_mod_id === modId);
     if (module) {
-      // TODO: Implement router navigation
-      window.history.pushState({}, '', module.c_route);
-      this.host.requestUpdate();
+      const router = (window as any).router;
+      if (router) {
+        router.navigate(module.c_route);
+      } else {
+        window.history.pushState({}, '', module.c_route);
+        this.host.requestUpdate();
+      }
     }
   }
 
@@ -39,7 +43,12 @@ export class Ui_Shell_Logic {
       localStorage.removeItem('user_data');
 
       // 💫 4. Điều hướng về màn hình Login
-      window.location.href = '/auth/login';
+      const router = (window as any).router;
+      if (router) {
+        router.navigate('/auth/login');
+      } else {
+        window.location.href = '/auth/login';
+      }
     } catch (error) {
       console.error('Logout error:', error);
       // TODO: Hiển thị toast error

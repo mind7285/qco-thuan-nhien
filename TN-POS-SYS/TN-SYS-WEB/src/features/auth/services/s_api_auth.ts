@@ -12,12 +12,12 @@ export class S_Api_Auth {
 
   // 🇻🇳 Đăng nhập
   // 🇺🇸 Login
-  async login(usrName: string, pwd: string): Promise<M_Tb_Auth_Usr> {
-    const response = await this.apiClient.post<M_Tb_Auth_Usr>('/auth/login', {
+  async login(usrName: string, pwd: string): Promise<{ user: M_Tb_Auth_Usr; token: string }> {
+    const response = await this.apiClient.post<{ user: M_Tb_Auth_Usr; token: string }>('/auth/login', {
       usrName,
       pwd,
     });
-    if (!response.data) {
+    if (!response.data || !response.data.user || !response.data.token) {
       throw new Error('Login failed');
     }
     return response.data;

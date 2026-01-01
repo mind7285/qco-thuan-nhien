@@ -24,12 +24,11 @@ func AuthMiddleware(db *gorm.DB) fiber.Handler {
 			token = token[7:]
 		}
 
-		// Kiểm tra session trong database
+		// Kiểm tra session trong database bằng function
 		var ses auth.M_Tb_Auth_Usr_Ses
-		err := db.Where("c_ses_token = ? AND c_expired_at > ? AND q_is_deleted = ?",
+		err := db.Raw(
+			"SELECT * FROM auth.qfn_usr_ses_verify($1)",
 			token,
-			utils.GetCurrentTimeMs(),
-			false,
 		).First(&ses).Error
 
 		if err != nil {
