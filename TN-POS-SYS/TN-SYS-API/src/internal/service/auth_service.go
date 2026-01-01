@@ -1,0 +1,280 @@
+// 🇻🇳 Auth Service
+// 🇺🇸 Auth Service
+package service
+
+import (
+	"errors"
+	"tn-pos-sys-api/internal/model/auth"
+	"tn-pos-sys-api/pkg/utils"
+
+	"go.uber.org/zap"
+	"gorm.io/gorm"
+)
+
+// S_Api_Auth Auth service
+type S_Api_Auth struct {
+	db     *gorm.DB
+	logger *zap.Logger
+}
+
+// NewAuthService Tạo service mới
+func NewAuthService(db *gorm.DB) *S_Api_Auth {
+	return &S_Api_Auth{
+		db:     db,
+		logger: utils.GetLogger(),
+	}
+}
+
+// Login Đăng nhập - Trả về cả session và user info
+// usrName: tên đăng nhập
+// pwd: mật khẩu plain text
+// loginIP: IP đăng nhập
+func (s *S_Api_Auth) Login(usrName, pwd, loginIP string) (*auth.M_Tb_Auth_Usr_Ses, *auth.M_Tb_Auth_Usr, error) {
+	// 1. Lấy user từ database
+	var usr auth.M_Tb_Auth_Usr
+	err := s.db.Raw(
+		"SELECT * FROM auth.qtb_usr WHERE c_usr_name = $1 AND q_is_deleted = $2 LIMIT 1",
+		usrName, false,
+	).Scan(&usr).Error
+	if err != nil {
+		s.logger.Error("User not found",
+			zap.String("usrName", usrName),
+			zap.Error(err),
+		)
+		// Không trả về lỗi chi tiết để bảo mật
+		return nil, nil, errors.New("Mật khẩu không chính xác")
+	}
+
+	// Kiểm tra xem có lấy được user không
+	if usr.QID == "" {
+		s.logger.Error("User QID is empty",
+			zap.String("usrName", usrName),
+		)
+		return nil, nil, errors.New("Mật khẩu không chính xác")
+	}
+
+	s.logger.Info("User found",
+		zap.String("usrID", usr.QID),
+		zap.String("usrName", usr.CUsrName),
+		zap.Bool("hasPwdHash", usr.CPwdHash != ""),
+		zap.Int("pwdHashLength", len(usr.CPwdHash)),
+		zap.String("pwdHashPrefix", func() string {
+			if len(usr.CPwdHash) >= 4 {
+				return usr.CPwdHash[:4]
+			}
+			return ""
+		}()),
+	)
+
+	// 2. Verify password bằng bcrypt
+	passwordMatch := utils.CheckPassword(pwd, usr.CPwdHash)
+	if !passwordMatch {
+		// Log chi tiết để debug
+		s.logger.Warn("Password mismatch",
+			zap.String("usrName", usrName),
+			zap.String("usrID", usr.QID),
+			zap.Int("pwdLength", len(pwd)),
+			zap.Int("hashLength", len(usr.CPwdHash)),
+			zap.String("hashPrefix", func() string {
+				if len(usr.CPwdHash) >= 7 {
+					return usr.CPwdHash[:7]
+				}
+				return usr.CPwdHash
+			}()),
+		)
+		return nil, nil, errors.New("Mật khẩu không chính xác")
+	}
+
+	s.logger.Info("Password verified successfully", zap.String("usrID", usr.QID))
+
+	// 3. Tạo session token (64 hex characters = 32 bytes)
+	sesToken := utils.GenerateRandomToken(32)
+
+	// 4. Tính expired_at (24 giờ từ bây giờ)
+	expiredAt := utils.GetCurrentTimeMs() + (24 * 60 * 60 * 1000)
+
+	// 5. Tạo session trong database
+	createdAt := utils.GetCurrentTimeMs()
+
+	// Xử lý loginIP (có thể NULL)
+	var loginIPPtr interface{}
+	if loginIP != "" {
+		loginIPPtr = loginIP
+	} else {
+		loginIPPtr = nil
+	}
+
+	s.logger.Info("Creating session",
+		zap.String("usrID", usr.QID),
+		zap.String("sesToken", sesToken[:16]+"..."),
+		zap.Int64("expiredAt", expiredAt),
+		zap.Int64("createdAt", createdAt),
+		zap.String("loginIP", loginIP),
+	)
+
+	// Dùng Raw SQL để insert session
+	var sesID string
+	err = s.db.Raw(
+		`INSERT INTO auth.qtb_usr_ses 
+		 (c_usr_id, c_ses_token, c_expired_at, c_login_ip, q_created_via, q_created_at, q_status, q_is_deleted)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		 RETURNING q_id`,
+		usr.QID, sesToken, expiredAt, loginIPPtr, "API_Login", createdAt, 1, false,
+	).Scan(&sesID).Error
+
+	if err != nil {
+		s.logger.Error("Failed to create session",
+			zap.String("usrID", usr.QID),
+			zap.String("sesToken", sesToken[:16]+"..."),
+			zap.Error(err),
+		)
+		return nil, nil, errors.New("Failed to create session")
+	}
+
+	// Lấy lại session vừa tạo
+	var ses auth.M_Tb_Auth_Usr_Ses
+	err = s.db.Raw(
+		"SELECT * FROM auth.qtb_usr_ses WHERE q_id = $1",
+		sesID,
+	).Scan(&ses).Error
+
+	if err != nil {
+		s.logger.Error("Failed to retrieve created session",
+			zap.String("sesID", sesID),
+			zap.Error(err),
+		)
+		return nil, nil, errors.New("Failed to retrieve session")
+	}
+
+	s.logger.Info("Session created successfully",
+		zap.String("usrID", usr.QID),
+		zap.String("sesToken", sesToken[:16]+"..."),
+	)
+
+	return &ses, &usr, nil
+}
+
+// Logout Đăng xuất
+func (s *S_Api_Auth) Logout(sesToken string) (bool, error) {
+	var result bool
+
+	err := s.db.Raw(
+		"SELECT auth.qsp_usr_logout(?)",
+		sesToken,
+	).Scan(&result).Error
+
+	if err != nil {
+		s.logger.Error("Logout failed", zap.Error(err))
+		return false, err
+	}
+
+	return result, nil
+}
+
+// Register Đăng ký
+func (s *S_Api_Auth) Register(usr *auth.M_Tb_Auth_Usr) (string, error) {
+	var usrID string
+
+	// Gọi stored procedure với NULL cho UUID
+	err := s.db.Raw(
+		"SELECT auth.qsp_usr_upsert($1, $2, $3, $4, $5, $6, $7, $8)",
+		nil, // p_usr_id (NULL for insert)
+		usr.CUsrName,
+		usr.CPwdHash,
+		usr.CFullName,
+		usr.CEmail,
+		usr.CPhone,
+		"API",
+		nil, // p_by
+	).Scan(&usrID).Error
+
+	if err != nil {
+		s.logger.Error("Register failed", zap.Error(err))
+		return "", err
+	}
+
+	return usrID, nil
+}
+
+// ForgotPwd Quên mật khẩu
+func (s *S_Api_Auth) ForgotPwd(email string) (bool, error) {
+	// Tìm user theo email
+	var usr auth.M_Tb_Auth_Usr
+	err := s.db.Where("c_email = ? AND q_is_deleted = ?", email, false).First(&usr).Error
+
+	if err != nil {
+		// Luôn trả về true để bảo mật
+		return true, nil
+	}
+
+	// Tạo OTP (giả sử đã có OTP code)
+	otpCode := "123456" // TODO: Generate OTP
+	err = s.db.Exec(
+		"SELECT auth.qsp_usr_otp_create($1, $2)",
+		usr.QID, otpCode,
+	).Error
+
+	if err != nil {
+		s.logger.Error("Failed to create OTP", zap.Error(err))
+	}
+
+	// TODO: Gửi email với OTP
+
+	return true, nil
+}
+
+// ChangePwd Đổi mật khẩu
+// oldPwd: mật khẩu cũ (plain text)
+// newPwd: mật khẩu mới (plain text)
+func (s *S_Api_Auth) ChangePwd(usrID, oldPwd, newPwd string) (bool, error) {
+	// Lấy user để lấy hash mật khẩu hiện tại
+	var usr auth.M_Tb_Auth_Usr
+	err := s.db.Where("q_id = ?", usrID).First(&usr).Error
+	if err != nil {
+		s.logger.Error("User not found", zap.Error(err))
+		return false, errors.New("User not found")
+	}
+
+	// Kiểm tra mật khẩu cũ
+	if !utils.CheckPassword(oldPwd, usr.CPwdHash) {
+		return false, errors.New("Mật khẩu cũ không chính xác")
+	}
+
+	// Hash mật khẩu mới
+	newPwdHash, err := utils.HashPassword(newPwd)
+	if err != nil {
+		s.logger.Error("Failed to hash new password", zap.Error(err))
+		return false, err
+	}
+
+	// Gọi stored procedure với hash
+	var result bool
+	err = s.db.Raw(
+		"SELECT auth.qsp_usr_change_pwd($1, $2, $3)",
+		usrID, usr.CPwdHash, newPwdHash,
+	).Scan(&result).Error
+
+	if err != nil {
+		s.logger.Error("Change password failed", zap.Error(err))
+		return false, err
+	}
+
+	return result, nil
+}
+
+// HasPerm Kiểm tra quyền
+func (s *S_Api_Auth) HasPerm(usrID, permCode string) (bool, error) {
+	var result bool
+
+	err := s.db.Raw(
+		"SELECT auth.qfn_usr_has_perm($1, $2)",
+		usrID, permCode,
+	).Scan(&result).Error
+
+	if err != nil {
+		s.logger.Error("Check permission failed", zap.Error(err))
+		return false, err
+	}
+
+	return result, nil
+}

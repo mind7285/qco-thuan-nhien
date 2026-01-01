@@ -438,3 +438,216 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql;
+
+-- Mapping: 🏝️ Fn_Auth_Usr_Get_List() -> auth.qfn_usr_get_list
+CREATE OR REPLACE FUNCTION auth.qfn_usr_get_list()
+RETURNS SETOF auth.qtb_usr AS $$
+BEGIN
+    RETURN QUERY
+    SELECT *
+    FROM auth.qtb_usr
+    WHERE q_is_deleted = FALSE
+    ORDER BY c_full_name ASC;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Mapping: 💾 SP_Auth_Usr_Delete() -> auth.qsp_usr_delete
+CREATE OR REPLACE FUNCTION auth.qsp_usr_delete(
+    p_usr_id UUID,
+    p_via VARCHAR,
+    p_by UUID
+) RETURNS BOOLEAN AS $$
+BEGIN
+    UPDATE auth.qtb_usr
+    SET q_is_deleted = TRUE,
+        q_deleted_via = p_via,
+        q_deleted_by = p_by,
+        q_deleted_at = (extract(epoch from now()) * 1000)::BIGINT
+    WHERE q_id = p_usr_id;
+    
+    RETURN FOUND;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Mapping: 💾 SP_Auth_Role_Upsert() -> auth.qsp_role_upsert
+CREATE OR REPLACE FUNCTION auth.qsp_role_upsert(
+    p_role_id UUID,
+    p_role_name VARCHAR,
+    p_role_code VARCHAR,
+    p_via VARCHAR,
+    p_by UUID
+) RETURNS UUID AS $$
+DECLARE
+    v_ret_id UUID;
+BEGIN
+    IF p_role_id IS NULL THEN
+        INSERT INTO auth.qtb_role (c_role_name, c_role_code, q_created_via, q_created_by)
+        VALUES (p_role_name, p_role_code, p_via, p_by)
+        RETURNING q_id INTO v_ret_id;
+    ELSE
+        UPDATE auth.qtb_role
+        SET c_role_name = p_role_name,
+            c_role_code = p_role_code,
+            q_updated_via = p_via,
+            q_updated_by = p_by,
+            q_updated_at = (extract(epoch from now()) * 1000)::BIGINT
+        WHERE q_id = p_role_id
+        RETURNING q_id INTO v_ret_id;
+    END IF;
+    RETURN v_ret_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Mapping: 💾 SP_Auth_Role_Delete() -> auth.qsp_role_delete
+CREATE OR REPLACE FUNCTION auth.qsp_role_delete(
+    p_role_id UUID,
+    p_via VARCHAR,
+    p_by UUID
+) RETURNS BOOLEAN AS $$
+BEGIN
+    -- 1. Xoá mềm role
+    UPDATE auth.qtb_role
+    SET q_is_deleted = TRUE,
+        q_deleted_via = p_via,
+        q_deleted_by = p_by,
+        q_deleted_at = (extract(epoch from now()) * 1000)::BIGINT
+    WHERE q_id = p_role_id;
+    
+    -- 2. Xoá tất cả liên kết trong qtb_role_perm
+    UPDATE auth.qtb_role_perm
+    SET q_is_deleted = TRUE,
+        q_deleted_via = p_via,
+        q_deleted_by = p_by,
+        q_deleted_at = (extract(epoch from now()) * 1000)::BIGINT
+    WHERE c_role_id = p_role_id;
+    
+    RETURN FOUND;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Mapping: 💾 SP_Auth_Role_Perm_Save() -> auth.qsp_role_perm_save
+-- Note: Nhận JSON array với format: [{"mod_id": "...", "perm_id": "..."}, ...]
+CREATE OR REPLACE FUNCTION auth.qsp_role_perm_save(
+    p_role_id UUID,
+    p_perms JSONB,  -- Array of {mod_id, perm_id}
+    p_via VARCHAR,
+    p_by UUID
+) RETURNS BOOLEAN AS $$
+DECLARE
+    v_perm_record JSONB;
+    v_mod_id UUID;
+    v_perm_id UUID;
+BEGIN
+    -- 1. Xoá tất cả các quyền cũ của role
+    UPDATE auth.qtb_role_perm
+    SET q_is_deleted = TRUE,
+        q_deleted_via = p_via,
+        q_deleted_by = p_by,
+        q_deleted_at = (extract(epoch from now()) * 1000)::BIGINT
+    WHERE c_role_id = p_role_id;
+    
+    -- 2. Lặp qua danh sách perms và INSERT bản ghi mới
+    FOR v_perm_record IN SELECT * FROM jsonb_array_elements(p_perms) LOOP
+        v_mod_id := (v_perm_record->>'mod_id')::UUID;
+        v_perm_id := (v_perm_record->>'perm_id')::UUID;
+        
+        INSERT INTO auth.qtb_role_perm (c_role_id, c_mod_id, c_perm_id, q_created_via, q_created_by)
+        VALUES (p_role_id, v_mod_id, v_perm_id, p_via, p_by)
+        ON CONFLICT (c_role_id, c_mod_id, c_perm_id) DO UPDATE
+        SET q_is_deleted = FALSE,
+            q_updated_via = p_via,
+            q_updated_by = p_by,
+            q_updated_at = (extract(epoch from now()) * 1000)::BIGINT;
+    END LOOP;
+    
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Mapping: 🏝️ Fn_Auth_Role_Get_List() -> auth.qfn_role_get_list
+CREATE OR REPLACE FUNCTION auth.qfn_role_get_list()
+RETURNS SETOF auth.qtb_role AS $$
+BEGIN
+    RETURN QUERY
+    SELECT *
+    FROM auth.qtb_role
+    WHERE q_is_deleted = FALSE
+    ORDER BY c_role_name ASC;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Mapping: 🏝️ Fn_Auth_Perm_Get_List() -> auth.qfn_perm_get_list
+-- Trả về danh sách Module kèm các Quyền hạn con
+-- Note: Cần có bảng mapping giữa perm và mod, hoặc lấy từ qtb_role_perm
+-- Tạm thời trả về tất cả mod và perm, cần join qua qtb_role_perm để lấy quan hệ
+CREATE OR REPLACE FUNCTION auth.qfn_perm_get_list()
+RETURNS TABLE (
+    mod_id UUID,
+    mod_name VARCHAR,
+    mod_code VARCHAR,
+    perm_id UUID,
+    perm_name VARCHAR,
+    perm_code VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT DISTINCT
+        m.q_id AS mod_id,
+        m.c_mod_name AS mod_name,
+        m.c_mod_code AS mod_code,
+        p.q_id AS perm_id,
+        p.c_perm_name AS perm_name,
+        p.c_perm_code AS perm_code
+    FROM auth.qtb_mod m
+    CROSS JOIN auth.qtb_perm p
+    WHERE m.q_is_deleted = FALSE
+      AND p.q_is_deleted = FALSE
+      -- Có thể thêm điều kiện lọc nếu có bảng mapping
+    ORDER BY m.c_mod_code, p.c_perm_code;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ---------------------------------------------------------
+-- 5. TRIGGERS (Audit Log)
+-- ---------------------------------------------------------
+
+-- Enable audit triggers for all auth tables
+CREATE TRIGGER trg_auth_role_audit
+    AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_role
+    FOR EACH ROW
+    EXECUTE FUNCTION core.qfn_audit_trigger();
+
+CREATE TRIGGER trg_auth_usr_audit
+    AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_usr
+    FOR EACH ROW
+    EXECUTE FUNCTION core.qfn_audit_trigger();
+
+CREATE TRIGGER trg_auth_usr_role_audit
+    AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_usr_role
+    FOR EACH ROW
+    EXECUTE FUNCTION core.qfn_audit_trigger();
+
+CREATE TRIGGER trg_auth_usr_ses_audit
+    AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_usr_ses
+    FOR EACH ROW
+    EXECUTE FUNCTION core.qfn_audit_trigger();
+
+CREATE TRIGGER trg_auth_mod_audit
+    AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_mod
+    FOR EACH ROW
+    EXECUTE FUNCTION core.qfn_audit_trigger();
+
+CREATE TRIGGER trg_auth_perm_audit
+    AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_perm
+    FOR EACH ROW
+    EXECUTE FUNCTION core.qfn_audit_trigger();
+
+CREATE TRIGGER trg_auth_role_perm_audit
+    AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_role_perm
+    FOR EACH ROW
+    EXECUTE FUNCTION core.qfn_audit_trigger();
+
+CREATE TRIGGER trg_auth_usr_otp_audit
+    AFTER INSERT OR UPDATE OR DELETE ON auth.qtb_usr_otp
+    FOR EACH ROW
+    EXECUTE FUNCTION core.qfn_audit_trigger();

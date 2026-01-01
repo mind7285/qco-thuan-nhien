@@ -1,0 +1,220 @@
+openapi: "3.0.0"
+info:
+  title: TN POS System API
+  description: API documentation for TN POS System
+  version: "1.0.0"
+  contact:
+    name: TN POS System Team
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+
+paths:
+  /shell/config:
+    get:
+      tags:
+        - Shell
+      summary: Get system configuration
+      description: Get public system configuration
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  
+  /shell/registry:
+    get:
+      tags:
+        - Shell
+      summary: Get module registry
+      description: Get list of registered modules (Auth Required)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Unauthorized
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: User login
+      description: Authenticate user and create session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - usrName
+                - pwd
+              properties:
+                usrName:
+                  type: string
+                  example: "admin"
+                pwd:
+                  type: string
+                  example: "password123"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Invalid credentials
+
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: User registration
+      description: Register new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthUser'
+      responses:
+        '200':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /auth/forgot-pwd:
+    post:
+      tags:
+        - Auth
+      summary: Forgot password
+      description: Request password recovery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Request processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: User logout
+      description: Logout and invalidate session (Auth Required)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+        '401':
+          description: Unauthorized
+
+  /auth/change-pwd:
+    post:
+      tags:
+        - Auth
+      summary: Change password
+      description: Change user password (Auth Required)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - oldPwd
+                - newPwd
+              properties:
+                oldPwd:
+                  type: string
+                newPwd:
+                  type: string
+      responses:
+        '200':
+          description: Password changed successfully
+        '401':
+          description: Unauthorized
+
+  /auth/has-perm/{permCode}:
+    get:
+      tags:
+        - Auth
+      summary: Check permission
+      description: Check if user has specific permission (Auth Required)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: permCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Permission check result
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: "Success"
+        data:
+          type: object
+
+    AuthUser:
+      type: object
+      properties:
+        c_usr_name:
+          type: string
+        c_pwd_hash:
+          type: string
+        c_full_name:
+          type: string
+        c_email:
+          type: string
+          format: email
+        c_phone:
+          type: string
+
