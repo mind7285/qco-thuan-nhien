@@ -15,6 +15,10 @@ export interface M_Tb_Shell_Mod extends M_Db_Ett {
   // 🇺🇸 Icon name (Material/Shoelace)
   c_icon: string;
 
+  // 🇻🇳 ID module cha (để phân cấp menu)
+  // 🇺🇸 Parent module ID (for menu hierarchy)
+  c_parent_id?: string;
+
   // 🇻🇳 Đường dẫn gốc (Base Route)
   // 🇺🇸 Base route path
   c_route: string;

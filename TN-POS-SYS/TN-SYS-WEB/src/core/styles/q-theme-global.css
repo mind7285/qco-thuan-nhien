@@ -1,0 +1,137 @@
+/* 🎨 Q-Theme Global CSS Variables - Colors, Typography, Shadows */
+/* 🇻🇳 CSS variables được định nghĩa ở :root level để hoạt động với dark mode */
+/* 🇺🇸 CSS variables defined at :root level to work with dark mode */
+
+:root {
+  /* ============================================
+     COLORS - Primary
+     ============================================ */
+  --q-color-primary: #007bff;
+  --q-color-primary-hover: #0056b3;
+  --q-color-primary-light: #f0f7ff;
+  --q-color-primary-ring: rgba(0, 123, 255, 0.1);
+
+  /* ============================================
+     COLORS - Gray Scale
+     ============================================ */
+  --q-color-gray-50: #f9fafb;
+  --q-color-gray-100: #f3f4f6;
+  --q-color-gray-200: #e5e7eb;
+  --q-color-gray-300: #d1d5db;
+  --q-color-gray-400: #9ca3af;
+  --q-color-gray-500: #6b7280;
+  --q-color-gray-600: #4b5563;
+  --q-color-gray-700: #374151;
+  --q-color-gray-800: #1f2937;
+  --q-color-gray-900: #111827;
+
+  /* ============================================
+     COLORS - Semantic
+     ============================================ */
+  --q-color-success: #10b981;
+  --q-color-error: #ef4444;
+  --q-color-warning: #f59e0b;
+  --q-color-info: #3b82f6;
+  --q-color-error-old: #dc3545; /* Legacy error color */
+
+  /* ============================================
+     COLORS - Background
+     ============================================ */
+  --q-color-bg-primary: #ffffff;
+  --q-color-bg-secondary: #f3f4f6;
+  --q-color-bg-hover: #f0f7ff;
+  --q-color-bg-error: #fee;
+
+  /* ============================================
+     COLORS - Text
+     ============================================ */
+  --q-color-text-primary: #333;
+  --q-color-text-secondary: #666;
+  --q-color-text-muted: #6b7280;
+  --q-color-text-white: #ffffff;
+
+  /* ============================================
+     COLORS - Border
+     ============================================ */
+  --q-color-border: #e0e0e0;
+  --q-color-border-light: #e5e7eb;
+
+  /* ============================================
+     TYPOGRAPHY - Font Family
+     ============================================ */
+  --q-font-family: Tahoma, Verdana, Arial, sans-serif;
+
+  /* ============================================
+     TYPOGRAPHY - Font Sizes
+     ============================================ */
+  --q-font-size-xs: 12px;
+  --q-font-size-sm: 14px;
+  --q-font-size-base: 16px;
+  --q-font-size-lg: 18px;
+  --q-font-size-xl: 20px;
+  --q-font-size-2xl: 24px;
+
+  /* ============================================
+     TYPOGRAPHY - Font Weights
+     ============================================ */
+  --q-font-weight-normal: 400;
+  --q-font-weight-medium: 500;
+  --q-font-weight-semibold: 600;
+  --q-font-weight-bold: 700;
+
+  /* ============================================
+     TYPOGRAPHY - Line Heights
+     ============================================ */
+  --q-line-height-tight: 1.25;
+  --q-line-height-normal: 1.5;
+  --q-line-height-relaxed: 1.75;
+
+  /* ============================================
+     SHADOWS
+     ============================================ */
+  --q-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --q-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --q-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --q-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+  --q-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* ============================================
+     BORDER RADIUS
+     ============================================ */
+  --q-radius-sm: 4px;
+  --q-radius-md: 8px;
+  --q-radius-lg: 12px;
+  --q-radius-xl: 16px;
+  --q-radius-2xl: 24px;
+  --q-radius-3xl: 32px;
+
+  /* ============================================
+     SPACING (Reference - actual spacing dùng Q-Layout/Q-Size)
+     ============================================ */
+  --q-space-1: 4px;
+  --q-space-2: 8px;
+  --q-space-3: 12px;
+  --q-space-4: 16px;
+  --q-space-6: 24px;
+}
+
+/* ============================================
+   DARK MODE OVERRIDES
+   ============================================ */
+:root.dark {
+  /* Background - Card sậm, container sáng hơn để nổi bật card */
+  --q-color-bg-primary: #111827; /* Gray-900 - Sậm (dùng cho card) */
+  --q-color-bg-secondary: #1f2937; /* Gray-800 - Sáng hơn một chút (dùng cho container) */
+  --q-color-bg-hover: #374151; /* Gray-700 */
+  --q-color-bg-error: #7f1d1d;
+  
+  /* Text - Trắng hết */
+  --q-color-text-primary: #ffffff; /* Trắng hoàn toàn */
+  --q-color-text-secondary: #ffffff; /* Trắng hoàn toàn */
+  --q-color-text-muted: #9ca3af; /* Gray-400 - Xám sáng cho icons trong dark mode để tương phản với input background sậm */
+  
+  /* Border */
+  --q-color-border: #374151; /* Gray-700 */
+  --q-color-border-light: #4b5563; /* Gray-600 */
+}
+

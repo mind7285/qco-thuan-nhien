@@ -8,6 +8,7 @@ import { Ui_Shell_Logic } from '../logic/ui-shell-logic';
 import { S_Api_Shell } from '../../services';
 import { useI18n } from '@/core/utils/i18n';
 import type { M_Tb_Shell_Mod } from '../../data/models';
+import type { M_Tb_Auth_Usr } from '../../../auth/data/models';
 
 @customElement('ui-shell-scn')
 export class UiShellScn extends LitElement {
@@ -24,7 +25,8 @@ export class UiShellScn extends LitElement {
   @state() isSidebarOpen: boolean = true;
   @state() currentModule: string = '';
   @state() modules: M_Tb_Shell_Mod[] = [];
-  @state() userData: unknown = null;
+  @state() userData: M_Tb_Auth_Usr | null = null;
+  @state() branchData: { id: string; name: string } | null = null;
   @state() isLoading: boolean = false;
 
   // 🎨 Styles
@@ -96,6 +98,7 @@ export class UiShellScn extends LitElement {
   // ♻️ Lifecycle
   protected async firstUpdated(_changedProperties: PropertyValues): Promise<void> {
     super.firstUpdated(_changedProperties);
+    this._loadUserData();
     await this._loadModules();
     this._updateCurrentModuleFromUrl();
     
@@ -103,6 +106,23 @@ export class UiShellScn extends LitElement {
     window.addEventListener('popstate', () => {
       this._updateCurrentModuleFromUrl();
     });
+  }
+
+  // 👤 Load user data from localStorage
+  private _loadUserData(): void {
+    try {
+      const data = localStorage.getItem('user_data');
+      if (data) {
+        this.userData = JSON.parse(data);
+      }
+      
+      const branchData = localStorage.getItem('branch_data');
+      if (branchData) {
+        this.branchData = JSON.parse(branchData);
+      }
+    } catch (error) {
+      console.error('Failed to load user data:', error);
+    }
   }
 
   protected updated(_changedProperties: PropertyValues): void {
@@ -134,6 +154,8 @@ export class UiShellScn extends LitElement {
         <!-- Header -->
         <ui-shell-header-wgt
           .title="${this._getCurrentModuleTitle()}"
+          .userName="${this.userData?.c_full_name || ''}"
+          .branchName="${this.branchData?.name || ''}"
           @logout="${this._onLogout}"
         ></ui-shell-header-wgt>
 
@@ -184,7 +206,10 @@ export class UiShellScn extends LitElement {
   // 💎 Update current module from URL
   private _updateCurrentModuleFromUrl(): void {
     const path = window.location.pathname;
-    const module = this.modules.find((m) => path.startsWith(m.c_route));
+    // Tìm module có c_route khớp dài nhất với path hiện tại
+    const sortedModules = [...this.modules].sort((a, b) => b.c_route.length - a.c_route.length);
+    const module = sortedModules.find((m) => path.startsWith(m.c_route));
+    
     if (module) {
       this.currentModule = module.c_mod_id;
     }

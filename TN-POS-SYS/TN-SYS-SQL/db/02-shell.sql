@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS shell.qtb_shell_mod (
     -- Business Columns
     c_title VARCHAR(128) NOT NULL,
     c_icon VARCHAR(64),
+    c_parent_id VARCHAR(64) REFERENCES shell.qtb_shell_mod(c_mod_id),
     c_route VARCHAR(128) NOT NULL,
     c_order INT DEFAULT 0,
     

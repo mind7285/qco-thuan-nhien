@@ -13,6 +13,21 @@ import (
 // AuthMiddleware Middleware xác thực
 func AuthMiddleware(db *gorm.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		// Log X-Trial-Mode header status
+		trialMode := c.Get("X-Trial-Mode")
+
+		logMsg := "🔍 [REAL MODE] Request"
+		if trialMode == "true" {
+			logMsg = "🔍 [TRIAL MODE] Request"
+		}
+
+		utils.LogInfo(logMsg, map[string]interface{}{
+			"path":         c.Path(),
+			"method":       c.Method(),
+			"ip":           c.IP(),
+			"trial_header": trialMode,
+		})
+
 		// Lấy token từ header
 		token := c.Get("Authorization")
 		if token == "" {
@@ -38,6 +53,8 @@ func AuthMiddleware(db *gorm.DB) fiber.Handler {
 		// Lưu user ID vào context
 		c.Locals("user_id", ses.CUsrID)
 		c.Locals("session_id", ses.QID)
+		// Lưu trial mode vào context
+		c.Locals("is_trial_mode", trialMode == "true")
 
 		return c.Next()
 	}

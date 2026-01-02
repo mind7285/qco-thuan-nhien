@@ -12,8 +12,8 @@ export class S_Api_Auth {
 
   // 🇻🇳 Đăng nhập
   // 🇺🇸 Login
-  async login(usrName: string, pwd: string): Promise<{ user: M_Tb_Auth_Usr; token: string }> {
-    const response = await this.apiClient.post<{ user: M_Tb_Auth_Usr; token: string }>('/auth/login', {
+  async login(usrName: string, pwd: string): Promise<{ user: M_Tb_Auth_Usr; token: string; branch?: { id: string; name: string } }> {
+    const response = await this.apiClient.post<{ user: M_Tb_Auth_Usr; token: string; branch?: { id: string; name: string } }>('/auth/login', {
       usrName,
       pwd,
     });

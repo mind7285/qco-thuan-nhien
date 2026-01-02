@@ -31,3 +31,16 @@ func GetLogger() *zap.Logger {
 	}
 	return Logger
 }
+
+// LogInfo Log thông tin với message và fields
+func LogInfo(message string, fields map[string]interface{}) {
+	logger := GetLogger()
+
+	// Convert fields to zap fields
+	zapFields := make([]zap.Field, 0, len(fields))
+	for k, v := range fields {
+		zapFields = append(zapFields, zap.Any(k, v))
+	}
+
+	logger.Info(message, zapFields...)
+}

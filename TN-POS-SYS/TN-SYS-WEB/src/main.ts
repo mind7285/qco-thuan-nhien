@@ -1,6 +1,16 @@
 // 🇻🇳 Main entry point
 // 🇺🇸 Main entry point
 import { Router, type Route } from './core/router/router';
+import { initTheme } from './core/utils/theme';
+import { initTrialMode } from './core/utils/trial';
+// Import global theme CSS variables
+import './core/styles/q-theme-global.css';
+
+// 🌗 Initialize theme on app load
+initTheme();
+
+// 🎨 Initialize trial mode on app load
+initTrialMode();
 
 // 🎨 Q-Layout Utility Classes được import trong từng component (LitElement Shadow DOM)
 // Không cần import global CSS vì LitElement sử dụng Shadow DOM
@@ -19,6 +29,7 @@ import './features/shell/ui/screens/ui-pos-scn';
 import './features/shell/ui/screens/ui-inv-scn';
 import './features/shell/ui/screens/ui-rpt-scn';
 import './features/shell/ui/screens/ui-cfg-scn';
+import './features/shell/ui/screens/ui-crm-scn';
 
 // ⚡️ Khởi tạo router
 const appContainer = document.getElementById('app');
@@ -89,7 +100,7 @@ const routes: Route[] = [
     requiresAuth: true,
   },
   {
-    path: '/dashboard',
+    path: '/dashboard*',
     handler: () => {
       const shell = document.createElement('ui-shell-scn');
       const content = document.createElement('ui-dashboard-scn');
@@ -99,7 +110,7 @@ const routes: Route[] = [
     requiresAuth: true,
   },
   {
-    path: '/auth',
+    path: '/auth*',
     handler: () => {
       const shell = document.createElement('ui-shell-scn');
       const content = document.createElement('div');
@@ -110,7 +121,7 @@ const routes: Route[] = [
     requiresAuth: true,
   },
   {
-    path: '/pos',
+    path: '/pos*',
     handler: () => {
       const shell = document.createElement('ui-shell-scn');
       const content = document.createElement('ui-pos-scn');
@@ -120,7 +131,7 @@ const routes: Route[] = [
     requiresAuth: true,
   },
   {
-    path: '/inv',
+    path: '/inv*',
     handler: () => {
       const shell = document.createElement('ui-shell-scn');
       const content = document.createElement('ui-inv-scn');
@@ -130,7 +141,17 @@ const routes: Route[] = [
     requiresAuth: true,
   },
   {
-    path: '/rpt',
+    path: '/crm*',
+    handler: () => {
+      const shell = document.createElement('ui-shell-scn');
+      const content = document.createElement('ui-crm-scn');
+      shell.appendChild(content);
+      return shell as any;
+    },
+    requiresAuth: true,
+  },
+  {
+    path: '/rpt*',
     handler: () => {
       const shell = document.createElement('ui-shell-scn');
       const content = document.createElement('ui-rpt-scn');
@@ -140,7 +161,7 @@ const routes: Route[] = [
     requiresAuth: true,
   },
   {
-    path: '/cfg',
+    path: '/cfg*',
     handler: () => {
       const shell = document.createElement('ui-shell-scn');
       const content = document.createElement('ui-cfg-scn');

@@ -1,6 +1,6 @@
 // 🇻🇳 Script để fix password hash cho user
 // 🇺🇸 Script to fix password hash for user
-// Usage: go run scripts/fix-user-password.go <username> <password>
+// Usage: go run src/cmd/fix-user-password/main.go <username> <password>
 package main
 
 import (
@@ -15,8 +15,8 @@ import (
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Println("Usage: go run scripts/fix-user-password.go <username> <password>")
-		fmt.Println("Example: go run scripts/fix-user-password.go admin7285 111")
+		fmt.Println("Usage: go run src/cmd/fix-user-password/main.go <username> <password>")
+		fmt.Println("Example: go run src/cmd/fix-user-password/main.go admin7285 111")
 		os.Exit(1)
 	}
 

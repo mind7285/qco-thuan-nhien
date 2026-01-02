@@ -43,6 +43,7 @@ export class Ui_Shell_Logic {
       // 💫 3. Xoá Token và thông tin User tại local
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_data');
+      localStorage.removeItem('branch_data');
 
       // 💫 4. Điều hướng về màn hình Login
       const router = (window as any).router;

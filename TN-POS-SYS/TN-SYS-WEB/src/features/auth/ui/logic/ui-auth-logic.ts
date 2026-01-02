@@ -24,6 +24,9 @@ export class Ui_Auth_Logic {
     if (typeof window !== 'undefined') {
       localStorage.setItem('auth_token', result.token);
       localStorage.setItem('user_data', JSON.stringify(result.user));
+      if (result.branch) {
+        localStorage.setItem('branch_data', JSON.stringify(result.branch));
+      }
     }
 
     return result.user;

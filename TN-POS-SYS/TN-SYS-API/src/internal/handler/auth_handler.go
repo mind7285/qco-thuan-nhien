@@ -22,6 +22,14 @@ func NewAuthHandler(s *service.S_Api_Auth) *AuthHandler {
 
 // Api_Auth_Usr_Login POST /auth/login
 func (h *AuthHandler) Api_Auth_Usr_Login(c *fiber.Ctx) error {
+	// Log X-Trial-Mode header nếu có (trước khi xử lý sâu hơn)
+	trialMode := c.Get("X-Trial-Mode")
+	if trialMode == "true" {
+		utils.LogInfo("🔍 [TRIAL MODE] Login request with X-Trial-Mode header", map[string]interface{}{
+			"ip": c.IP(),
+		})
+	}
+
 	var req struct {
 		UsrName string `json:"usrName" validate:"required"`
 		Pwd     string `json:"pwd" validate:"required"`
@@ -37,10 +45,14 @@ func (h *AuthHandler) Api_Auth_Usr_Login(c *fiber.Ctx) error {
 		return utils.SendUnauthorized(c, err.Error())
 	}
 
-	// Trả về session token và user info trong response
+	// Trả về session token và user info trong response, kèm thông tin chi nhánh mặc định
 	return utils.SendSuccess(c, map[string]interface{}{
 		"user":  usr,
 		"token": ses.CSesToken,
+		"branch": map[string]string{
+			"id":   "9a1b2c3d-4e5f-6789-abcd-ef0123456789",
+			"name": "Vũng Tàu",
+		},
 	})
 }
 

@@ -72,8 +72,29 @@ export class Api_Client {
   // 🇻🇳 Lấy headers xác thực
   // 🇺🇸 Get authentication headers
   private getAuthHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {};
+    
+    // Authorization header
     const token = this.getToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    // Trial mode header
+    const isTrial = this.getTrialMode();
+    if (isTrial) {
+      headers['X-Trial-Mode'] = 'true';
+    }
+    
+    return headers;
+  }
+  
+  // 🇻🇳 Lấy trial mode từ storage
+  // 🇺🇸 Get trial mode from storage
+  private getTrialMode(): boolean {
+    if (typeof window === 'undefined') return false;
+    const trial = localStorage.getItem('app_trial_mode');
+    return trial === 'true';
   }
 
   // 🇻🇳 Lấy token từ storage

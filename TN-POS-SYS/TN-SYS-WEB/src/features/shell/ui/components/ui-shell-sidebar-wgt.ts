@@ -4,6 +4,7 @@ import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { useI18n, type Language } from '@/core/utils/i18n';
+import { qThemeStyles } from '@/core/styles/q-theme';
 import type { M_Tb_Shell_Mod } from '../../data/models';
 
 @customElement('ui-shell-sidebar-wgt')
@@ -19,42 +20,142 @@ export class UiShellSidebarWgt extends LitElement {
   @state() language: Language = this.i18n.language;
 
   // 🎨 Styles
-  static styles = css`
+  static styles = [
+    qThemeStyles,
+    css`
     :host {
       display: block;
-      width: 250px;
+      width: 300px;
       height: 100%;
-      background-color: var(--q-color-bg-secondary, #f5f5f5);
-      border-right: 1px solid var(--q-color-border, #e0e0e0);
+      background-color: var(--q-color-bg-secondary);
+      border-right: 1px solid var(--q-color-border);
     }
 
     .sidebar {
-      padding: var(--q-space-4, 16px);
+      padding: var(--q-space-2) var(--q-space-3);
       height: 100%;
       overflow-y: auto;
     }
 
+    /* 🧱 Nhóm Module */
+    .module-group {
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .group-label {
+      padding: 8px 16px;
+      font-size: var(--q-font-size-xs);
+      font-weight: var(--q-font-weight-bold);
+      color: var(--q-color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 16px;
+      margin-bottom: 4px;
+    }
+
     .module-item {
-      padding: var(--q-space-3, 12px);
-      margin-bottom: var(--q-space-2, 8px);
-      border-radius: var(--q-radius-md, 8px);
+      padding: 12px 16px;
+      margin-bottom: 2px;
+      border-radius: var(--q-radius-md);
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      color: var(--q-color-text-primary);
+      font-family: var(--q-font-family);
+      font-size: var(--q-font-size-base);
+      font-weight: var(--q-font-weight-medium);
+      white-space: nowrap;
+      gap: 8px;
+    }
+
+    .module-item span:not(.module-icon):not(.expand-icon) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      display: flex;
+      align-items: center;
     }
 
     .module-item:hover {
-      background-color: var(--q-color-bg-hover, #e8e8e8);
+      background-color: var(--q-color-bg-hover);
+      color: var(--q-color-primary);
     }
 
     .module-item.active {
-      background-color: var(--q-color-primary, #007bff);
-      color: white;
+      background-color: var(--q-color-primary-light);
+      color: var(--q-color-primary);
+      font-weight: var(--q-font-weight-semibold);
+    }
+    
+    .module-item.active-root {
+      background-color: var(--q-color-primary);
+      color: var(--q-color-text-white);
     }
 
-    .module-icon {
-      margin-right: var(--q-space-2, 8px);
+    .module-item.active-root,
+    .module-item.active {
+      color: inherit;
     }
-  `;
+    
+    .expand-icon {
+      margin-left: auto;
+      font-family: 'Material Icons', 'Material Symbols Outlined', sans-serif;
+      font-size: 20px;
+      transition: transform 0.3s ease;
+      color: var(--q-color-text-muted);
+      opacity: 0.5;
+    }
+
+    .module-group:hover .expand-icon,
+    .module-group.active .expand-icon {
+      opacity: 1;
+    }
+
+    .module-group:hover .module-item:not(.active-root) .expand-icon {
+      transform: rotate(180deg);
+    }
+
+    .sub-menu {
+      margin-left: 12px;
+      padding-left: 8px;
+      border-left: 2px solid var(--q-color-border-light);
+      overflow: hidden;
+      max-height: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    /* Xổ ra khi hover vào group HOẶC khi group đang có item active */
+    .module-group:hover .sub-menu,
+    .module-group.active .sub-menu {
+      max-height: 800px; /* Tăng lên cho chắc chắn nếu có nhiều menu con */
+      opacity: 1;
+      visibility: visible;
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+
+    /* Đảm bảo khi rê chuột vào sub-menu thì group vẫn được coi là đang hover */
+    .sub-menu:hover {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .sub-item {
+      padding: 10px 16px;
+      margin-bottom: 2px;
+      font-size: var(--q-font-size-sm);
+      font-weight: var(--q-font-weight-normal);
+    }
+
+    .sub-item.active {
+      background-color: var(--q-color-primary-light);
+      color: var(--q-color-primary);
+    }
+  `];
 
   // ♻️ Lifecycle
   protected firstUpdated(_changedProperties: PropertyValues): void {
@@ -88,26 +189,83 @@ export class UiShellSidebarWgt extends LitElement {
 
   // 🏙️ Render
   render() {
+    const topLevelModules = this.modules.filter(m => !m.c_parent_id);
+    
+    // Phân nhóm các module cấp cao
+    const groups = [
+      { label: this.language === 'vi' ? 'Bàn làm việc' : 'Workspace', mods: topLevelModules.filter(m => m.c_mod_id === 'dashboard') },
+      { label: this.language === 'vi' ? 'Nghiệp vụ' : 'Operations', mods: topLevelModules.filter(m => ['pos', 'inv', 'crm'].includes(m.c_mod_id)) },
+      { label: this.language === 'vi' ? 'Thống kê' : 'Statistics', mods: topLevelModules.filter(m => m.c_mod_id === 'rpt') },
+      { label: this.language === 'vi' ? 'Cấu hình' : 'Settings', mods: topLevelModules.filter(m => m.c_mod_id === 'cfg') },
+    ];
+
     return html`
       <div class="sidebar">
         ${repeat(
-          this.modules,
-          (mod) => mod.c_mod_id,
-          (mod) => html`
-            <div
-              class="module-item ${mod.c_mod_id === this.currentModule ? 'active' : ''}"
-              @click="${() => this._onModClick(mod.c_mod_id)}"
-            >
-              <span class="module-icon">${mod.c_icon || '📦'}</span>
-              <span>${this._getModuleTitle(mod)}</span>
-            </div>
-          `
+          groups,
+          (g) => g.label,
+          (g) => g.mods.length > 0 ? html`
+            <div class="group-label">${g.label}</div>
+            ${repeat(
+              g.mods,
+              (mod) => mod.c_mod_id,
+              (mod) => this._renderModuleGroup(mod)
+            )}
+          ` : ''
         )}
       </div>
     `;
   }
 
+  // 🧱 Render từng nhóm Module (Parent + Children)
+  private _renderModuleGroup(mod: M_Tb_Shell_Mod) {
+    const children = this.modules.filter(m => m.c_parent_id === mod.c_mod_id);
+    const hasChildren = children.length > 0;
+    
+    // Kiểm tra xem group này có đang chứa module active không
+    const isParentActive = mod.c_mod_id === this.currentModule;
+    const hasActiveChild = children.some(c => c.c_mod_id === this.currentModule);
+    const isGroupActive = isParentActive || hasActiveChild;
+
+    return html`
+      <div class="module-group ${isGroupActive ? 'active' : ''}">
+        <div
+          class="module-item ${isParentActive ? 'active-root' : ''} ${hasActiveChild && !isParentActive ? 'active' : ''}"
+          @click="${() => this._onParentClick(mod, hasChildren)}"
+        >
+          <span>${this._getModuleTitle(mod)}</span>
+          ${hasChildren ? html`<span class="expand-icon">expand_more</span>` : ''}
+        </div>
+
+        ${hasChildren ? html`
+          <div class="sub-menu">
+            ${repeat(
+              children,
+              (child) => child.c_mod_id,
+              (child) => html`
+                <div
+                  class="module-item sub-item ${child.c_mod_id === this.currentModule ? 'active' : ''}"
+                  @click="${() => this._onModClick(child.c_mod_id)}"
+                >
+                  <span>${this._getModuleTitle(child)}</span>
+                </div>
+              `
+            )}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
   // 🎨 Events
+  private _onParentClick(mod: M_Tb_Shell_Mod, hasChildren: boolean) {
+    // Nếu có con, click vào parent sẽ không điều hướng mà chỉ để UI handle hover (hoặc có thể toggle nếu muốn)
+    // Ở đây mình ưu tiên điều hướng nếu parent có route hợp lệ và không phải chỉ là group
+    if (!hasChildren || mod.c_route !== '#') {
+      this._onModClick(mod.c_mod_id);
+    }
+  }
+
   private _onModClick(modId: string) {
     this.dispatchEvent(
       new CustomEvent('mod-click', {

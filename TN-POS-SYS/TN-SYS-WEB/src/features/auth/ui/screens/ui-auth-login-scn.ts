@@ -6,7 +6,10 @@ import { Ui_Auth_Logic } from '../logic/ui-auth-logic';
 import { toast } from '@/core/utils/toast';
 import { qLayoutStyles } from '@/core/styles/q-layout';
 import { qSizeStyles } from '@/core/styles/q-size';
+import { qThemeStyles } from '@/core/styles/q-theme';
 import { getLanguage, setLanguage, type Language } from '@/core/utils/i18n';
+import { getTheme, toggleTheme, type Theme } from '@/core/utils/theme';
+import { setTrialMode, clearTrialMode } from '@/core/utils/trial';
 import logoUrl from '@/assets/images/core/TN-Logo.png';
 
 @customElement('ui-auth-login-scn')
@@ -22,13 +25,14 @@ export class UiAuthLoginScn extends LitElement {
   @state() show_password: boolean = false;
   @state() is_remember: boolean = false;
   @state() language: Language = getLanguage();
+  @state() theme: Theme = getTheme();
   @state() usr_name_error: string = ''; // Validation error cho username
   @state() pwd_error: string = ''; // Validation error cho password
 
   // 🌐 Translations
   private translations = {
     vi: {
-      subtitle: 'Hệ thống bán hàng THUẦN NHIÊN',
+      subtitle: 'Hệ thống POS THUẦN NHIÊN',
       title: 'ĐĂNG NHẬP',
       usernameLabel: 'Tên đăng nhập',
       usernamePlaceholder: 'Nhập tên đăng nhập',
@@ -72,12 +76,13 @@ export class UiAuthLoginScn extends LitElement {
   static styles = [
     qLayoutStyles,
     qSizeStyles,
+    qThemeStyles,
     css`
     :host {
       display: block;
       width: 100%;
       height: 100vh;
-      font-family: Tahoma, Verdana, Arial, sans-serif;
+      font-family: var(--q-font-family);
     }
 
     /* 🧱 Utility Spacers */
@@ -85,11 +90,11 @@ export class UiAuthLoginScn extends LitElement {
     .q-gap-1x { height: 25px; width: 100%; }
     .q-gap-2x { height: 50px; width: 100%; }
 
-    /* 📱 Mobile: Full screen, white bg, scroll */
+    /* 📱 Mobile: Full screen, bg-secondary, scroll */
     .container {
       width: 100%;
       height: 100vh;
-      background-color: white;
+      background-color: var(--q-color-bg-secondary);
       overflow-y: auto;
       overflow-x: hidden;
       display: flex;
@@ -100,7 +105,7 @@ export class UiAuthLoginScn extends LitElement {
     .card {
       /* Layout utilities: q-flex-parent-column q-flex-parent-column-space-between q-gap-05x q-w-full q-flex-grow q-min-h-0 */
       /* Size utilities applied via classes in HTML */
-      border-color: #e5e7eb; /* Gray-200 */
+      border-color: var(--q-color-border-light);
       box-sizing: border-box; /* Padding và border được tính trong width */
     }
 
@@ -139,40 +144,35 @@ export class UiAuthLoginScn extends LitElement {
 
     .title {
       text-align: center;
-      font-size: 24px;
-      font-weight: 600;
       margin: 0; /* Margin handled by spacers */
-      color: #333;
+      /* Colors và fonts được áp dụng qua utility classes */
     }
 
     .subtitle {
       text-align: center;
-      color: #6b7280; /* Gray-500 */
-      font-size: 14px;
       margin: 0; /* Margin-Bottom: 0px */
+      /* Colors và fonts được áp dụng qua utility classes */
     }
 
     .form-label {
-      font-weight: 500;
-      color: #374151; /* Gray-700 */
-      font-size: 14px;
-      line-height: 1.5; /* Cố định line-height để tránh giật */
+      line-height: var(--q-line-height-normal); /* Cố định line-height để tránh giật */
       margin: 0; /* Cố định margin để tránh giật */
       padding: 0; /* Cố định padding để tránh giật */
       display: block; /* Cố định display */
       transition: color 0.2s;
       text-align: left; /* Giữ nguyên left align */
       background-color: transparent; /* Background giữ nguyên (transparent) */
+      /* Colors và fonts được áp dụng qua utility classes */
     }
 
     .form-label.error {
-      color: #ef4444; /* Red - Error color (chỉ text đỏ) */
-      line-height: 1.5; /* Giữ nguyên line-height */
+      line-height: var(--q-line-height-normal); /* Giữ nguyên line-height */
       margin: 0; /* Giữ nguyên margin */
       padding: 0; /* Giữ nguyên padding */
       display: block; /* Giữ nguyên display */
       text-align: left; /* Giữ nguyên left align */
       background-color: transparent; /* Background giữ nguyên (transparent) */
+      /* Colors được áp dụng qua utility classes */
     }
 
     .input-wrapper {
@@ -183,8 +183,6 @@ export class UiAuthLoginScn extends LitElement {
 
     .input-icon {
       position: absolute;
-      font-size: 18px;
-      color: #6b7280; /* Gray-500 */
       pointer-events: none;
       font-family: 'Material Icons', 'Material Symbols Outlined', sans-serif;
       font-weight: normal;
@@ -199,21 +197,57 @@ export class UiAuthLoginScn extends LitElement {
       -webkit-font-feature-settings: 'liga';
       font-feature-settings: 'liga';
       -webkit-font-smoothing: antialiased;
+      /* Icons màu xám sáng trong dark mode để tương phản với input background sậm */
+      color: var(--q-color-text-muted) !important;
+      opacity: 1 !important;
+      z-index: 1;
+    }
+    
+    /* Đảm bảo icons sáng hơn trong dark mode */
+    :host-context(.dark) .input-icon {
+      color: #d1d5db !important; /* Gray-300 - Sáng hơn để dễ thấy trên background sậm */
     }
 
     .form-input {
       width: 100%;
-      border: 1px solid #d1d5db; /* Gray-300 */
-      font-size: 16px;
+      border: 1px solid var(--q-color-gray-300);
       box-sizing: border-box;
       transition: all 0.2s;
+      /* Colors và fonts được áp dụng qua utility classes */
     }
 
 
     .form-input:focus {
       outline: none;
-      border-color: #007bff;
-      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1); /* Ring shadow */
+      border-color: var(--q-color-primary);
+      box-shadow: 0 0 0 3px var(--q-color-primary-ring); /* Ring shadow */
+    }
+
+    /* Override autofill styles của trình duyệt để giữ background đúng theo theme */
+    .form-input:-webkit-autofill,
+    .form-input:-webkit-autofill:hover,
+    .form-input:-webkit-autofill:focus,
+    .form-input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 30px var(--q-color-bg-primary) inset !important;
+      -webkit-text-fill-color: var(--q-color-text-primary) !important;
+      box-shadow: 0 0 0 30px var(--q-color-bg-primary) inset !important;
+      background-color: var(--q-color-bg-primary) !important;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+
+    /* Đảm bảo icons vẫn sáng khi input có autofill - dùng parent selector */
+    .input-wrapper:has(.form-input:-webkit-autofill) .input-icon,
+    .input-wrapper:has(.form-input:-webkit-autofill:hover) .input-icon,
+    .input-wrapper:has(.form-input:-webkit-autofill:focus) .input-icon {
+      color: var(--q-color-text-muted) !important;
+      opacity: 1 !important;
+    }
+
+    /* Dark mode: Icons vẫn sáng khi autofill */
+    :host-context(.dark) .input-wrapper:has(.form-input:-webkit-autofill) .input-icon,
+    :host-context(.dark) .input-wrapper:has(.form-input:-webkit-autofill:hover) .input-icon,
+    :host-context(.dark) .input-wrapper:has(.form-input:-webkit-autofill:focus) .input-icon {
+      color: #d1d5db !important; /* Gray-300 - Sáng để dễ thấy */
     }
 
     .input-suffix {
@@ -226,16 +260,15 @@ export class UiAuthLoginScn extends LitElement {
       background: none;
       border: none;
       cursor: pointer;
-      color: #6b7280; /* Gray-500 */
-      font-size: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: color 0.2s;
+      /* Colors và fonts được áp dụng qua utility classes */
     }
 
     .suffix-btn:hover {
-      color: #374151; /* Gray-700 */
+      color: var(--q-color-gray-700);
     }
 
     .suffix-btn:active {
@@ -244,17 +277,15 @@ export class UiAuthLoginScn extends LitElement {
 
     .btn-primary {
       width: 100%;
-      background-color: #007bff;
-      color: white;
+      background-color: var(--q-color-primary);
       border: none;
-      font-size: 16px;
-      font-weight: 700; /* Bold */
       cursor: pointer;
       transition: background-color 0.2s;
+      /* Colors và fonts được áp dụng qua utility classes */
     }
 
     .btn-primary:hover:not(:disabled) {
-      background-color: #0056b3;
+      background-color: var(--q-color-primary-hover);
     }
 
     .btn-primary:disabled {
@@ -264,16 +295,14 @@ export class UiAuthLoginScn extends LitElement {
 
     .btn-secondary {
       width: 100%;
-      background-color: white;
-      color: #007bff;
-      font-size: 16px;
-      font-weight: 700; /* Bold */
+      border: none;
       cursor: pointer;
       transition: all 0.2s;
+      /* Colors và fonts được áp dụng qua utility classes */
     }
 
     .btn-secondary:hover:not(:disabled) {
-      background-color: #f0f7ff;
+      background-color: var(--q-color-primary-light);
     }
 
     .btn-secondary:disabled {
@@ -296,12 +325,12 @@ export class UiAuthLoginScn extends LitElement {
 
     .checkbox-input {
       cursor: pointer;
-      accent-color: #007bff;
+      accent-color: var(--q-color-primary);
     }
 
     .checkbox-label {
-      font-size: 14px;
-      color: #374151; /* Gray-700 */
+      font-size: var(--q-font-size-sm);
+      color: var(--q-color-gray-700);
       cursor: pointer;
       user-select: none;
     }
@@ -318,10 +347,10 @@ export class UiAuthLoginScn extends LitElement {
     }
 
     .link {
-      color: #007bff;
+      color: var(--q-color-primary);
       text-decoration: none;
       cursor: pointer;
-      font-size: 14px;
+      font-size: var(--q-font-size-sm);
     }
 
     .link:hover {
@@ -329,10 +358,10 @@ export class UiAuthLoginScn extends LitElement {
     }
 
     .error {
-      color: #dc3545;
-      font-size: 14px;
+      color: var(--q-color-error-old);
+      font-size: var(--q-font-size-sm);
       text-align: center;
-      background-color: #fee;
+      background-color: var(--q-color-bg-error);
       /* Size utilities: q-p-8 q-rounded-4 */
     }
 
@@ -344,51 +373,71 @@ export class UiAuthLoginScn extends LitElement {
     }
 
     .footer-version {
-      font-size: 12px;
-      color: #6b7280; /* Gray-500 */
-    }
-
-    .footer-support {
-      font-size: 12px;
-      color: #6b7280; /* Gray-500 */
       display: flex;
       align-items: center;
       gap: 4px;
+      /* Colors và fonts được áp dụng qua utility classes */
     }
 
-    .footer-lang {
+    .footer-support {
       display: flex;
+      align-items: center;
+      gap: 4px;
+      /* Colors và fonts được áp dụng qua utility classes */
+    }
+
+    .footer-controls {
+      display: flex;
+      align-items: center;
     }
 
     .lang-flag {
-      font-size: 20px;
       cursor: pointer;
       transition: transform 0.2s;
-      opacity: 0.6;
+      opacity: 1;
+      /* Font size được áp dụng qua utility classes */
     }
 
     .lang-flag:hover {
       transform: scale(1.1);
-      opacity: 0.8;
+      opacity: 0.9;
     }
 
     .lang-flag.active {
       opacity: 1;
+      transform: scale(1);
+    }
+
+    .theme-toggle {
+      cursor: pointer;
+      transition: transform 0.2s;
+      opacity: 0.6;
+      margin-left: 8px; /* Spacing từ language flags */
+      /* Font size được áp dụng qua utility classes */
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      opacity: 0.8;
+    }
+
+    .theme-toggle.active {
+      opacity: 1;
       transform: scale(1.15);
     }
 
-    /* 💻 Desktop/Tablet: Gray bg, centered card */
+    /* 💻 Desktop/Tablet: bg-secondary, centered card */
     @media (min-width: 769px) {
       .container {
-        background-color: #f3f4f6; /* Gray-100 */
+        background-color: var(--q-color-bg-secondary);
         align-items: center;
         justify-content: center; 
         box-sizing: border-box; /* Padding được tính trong height */
       }
 
       .card {
-        background: white;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* Shadow-2XL */
+        background: var(--q-color-bg-primary);
+        box-shadow: var(--q-shadow-2xl);
         /* Layout utilities: q-flex-parent-column q-flex-parent-column-space-between q-gap-05x */
         /* Size utilities: q-width-400 q-min-h-600 q-max-h-720 q-p-40 q-rounded-32 */
         overflow: hidden;
@@ -436,13 +485,27 @@ export class UiAuthLoginScn extends LitElement {
     // Autofocus vào input đầu tiên
     const firstInput = this.shadowRoot?.querySelector('.form-input') as HTMLInputElement;
     firstInput?.focus();
+    
+    // Listen to theme change events
+    window.addEventListener('themechange', this._onThemeChange);
   }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    window.removeEventListener('themechange', this._onThemeChange);
+  }
+
+  // 🌗 Handle theme change
+  private _onThemeChange = (e: Event) => {
+    const event = e as CustomEvent<{ theme: Theme }>;
+    this.theme = event.detail.theme;
+  };
 
   // 🏙️ Render
   render() {
     return html`
-      <div class="container q-p-24">
-        <div class="card q-flex-parent-column q-flex-parent-column-space-between q-gap-05x q-w-full q-flex-grow q-min-h-0 q-rounded-16 q-border-1 q-width-450 q-min-h-600 q-max-h-720 q-p-40 q-rounded-32">
+      <div class="container q-p-24 q-bg-secondary q-font">
+        <div class="card q-flex-parent-column q-flex-parent-column-space-between q-gap-05x q-w-full q-flex-grow q-min-h-0 q-rounded-16 q-border-1 q-width-450 q-min-h-600 q-max-h-720 q-p-40 q-rounded-32 q-bg-primary q-border-light">
           ${this._renderBlockA()}
           ${this._renderBlockB()}
           ${this._renderBlockZ()}
@@ -497,12 +560,12 @@ export class UiAuthLoginScn extends LitElement {
     const hasError = !!this.usr_name_error;
     return html`
       <div class="form-group q-flex-child-column q-gap-02x">
-        <label class="form-label ${hasError ? 'error' : ''}">${this.t('usernameLabel')}</label>
+        <label class="form-label q-text-sm q-font-medium q-leading-normal ${hasError ? 'error q-text-error' : 'q-text-primary'}">${this.t('usernameLabel')}</label>
         <div class="input-wrapper">
           <span class="input-icon q-left-12">person</span>
           <input
             id="username-input"
-            class="form-input q-height-50 q-py-12 q-px-40 q-rounded-8 ${this.usr_name ? 'q-pr-80' : ''}"
+            class="form-input q-height-50 q-py-12 q-px-40 q-rounded-8 q-text-base q-font q-text-primary q-bg-primary ${this.usr_name ? 'q-pr-80' : ''}"
             type="text"
             .value="${this.usr_name}"
             @input="${(e: Event) => {
@@ -526,12 +589,12 @@ export class UiAuthLoginScn extends LitElement {
     const hasError = !!this.pwd_error;
     return html`
       <div class="form-group q-flex-child-column q-gap-02x">
-        <label class="form-label ${hasError ? 'error' : ''}">${this.t('passwordLabel')}</label>
+        <label class="form-label q-text-sm q-font-medium q-leading-normal ${hasError ? 'error q-text-error' : 'q-text-primary'}">${this.t('passwordLabel')}</label>
         <div class="input-wrapper">
           <span class="input-icon q-left-12">lock</span>
           <input
             id="password-input"
-            class="form-input q-height-50 q-py-12 q-px-40 q-rounded-8 ${this.pwd ? 'q-pr-100' : ''}"
+            class="form-input q-height-50 q-py-12 q-px-40 q-rounded-8 q-text-base q-font q-text-primary q-bg-primary ${this.pwd ? 'q-pr-100' : ''}"
             type="${this.show_password ? 'text' : 'password'}"
             .value="${this.pwd}"
             @input="${(e: Event) => {
@@ -554,7 +617,7 @@ export class UiAuthLoginScn extends LitElement {
     return html`
       <div class="input-suffix q-right-12">
         <button
-          class="suffix-btn q-p-4"
+          class="suffix-btn q-p-4 q-text-lg q-text-muted"
           @click="${() => {
         this.usr_name = '';
       }}"
@@ -573,7 +636,7 @@ export class UiAuthLoginScn extends LitElement {
     return html`
       <div class="input-suffix q-right-12 q-gap-8">
         <button
-          class="suffix-btn q-p-4"
+          class="suffix-btn q-p-4 q-text-lg q-text-muted"
           @click="${() => {
         this.show_password = !this.show_password;
       }}"
@@ -584,7 +647,7 @@ export class UiAuthLoginScn extends LitElement {
           👁️
         </button>
         <button
-          class="suffix-btn q-p-4"
+          class="suffix-btn q-p-4 q-text-lg q-text-muted"
           @click="${() => {
         this.pwd = '';
       }}"
@@ -634,14 +697,14 @@ export class UiAuthLoginScn extends LitElement {
     return html`
       <div class="buttons-row q-gap-16">
         <button
-          class="btn-secondary q-height-60 q-rounded-24 q-border-2"
+          class="btn-secondary q-height-60 q-rounded-24 q-border-2 q-font-bold q-font"
           ?disabled="${this.is_loading}"
           @click="${this._onTrialClick}"
         >
           ${this.t('trialBtn')}
         </button>
         <button
-          class="btn-primary q-height-60 q-rounded-24"
+          class="btn-primary q-height-60 q-rounded-24 q-font-bold q-font"
           ?disabled="${this.is_loading}"
           @click="${this._onLoginClick}"
         >
@@ -671,17 +734,17 @@ export class UiAuthLoginScn extends LitElement {
             <span>📞</span>
             <span>${this.t('hotline')}</span>
           </div>
-          <div class="footer-lang q-gap-8 q-mt-4">
+          <div class="footer-controls q-flex-child-row q-items-center q-gap-8 q-mt-4">
             <span 
-              class="lang-flag ${this.language === 'vi' ? 'active' : ''}" 
-              title="Tiếng Việt"
-              @click="${() => this._onLanguageChange('vi')}"
-            >🇻🇳</span>
+              class="lang-flag active" 
+              title="${this.language === 'vi' ? 'Switch to English' : 'Chuyển sang Tiếng Việt'}"
+              @click="${this._onLanguageToggle}"
+            >${this.language === 'vi' ? '🇻🇳' : '🇺🇸'}</span>
             <span 
-              class="lang-flag ${this.language === 'en' ? 'active' : ''}" 
-              title="English"
-              @click="${() => this._onLanguageChange('en')}"
-            >🇺🇸</span>
+              class="theme-toggle ${this.theme === 'dark' ? 'active' : ''}" 
+              title="${this.theme === 'dark' ? 'Chuyển sang sáng' : 'Chuyển sang tối'}"
+              @click="${this._onThemeToggle}"
+            >🌗</span>
           </div>
         </div>
       </div>
@@ -737,7 +800,11 @@ export class UiAuthLoginScn extends LitElement {
   }
 
   // 🎨 Events
-  private async _onLoginClick() {
+  private async _onLoginClick(isTrialArg: boolean | any = false) {
+    // 🎨 Nếu isTrialArg là một Event (từ @click), nó sẽ là một object truthy.
+    // Chúng ta chỉ coi là trial mode nếu được truyền vào true một cách tường minh.
+    const isTrial = isTrialArg === true;
+
     // Validate trước khi gọi API
     const validation = this._validateForm();
     if (!validation.isValid) {
@@ -756,6 +823,11 @@ export class UiAuthLoginScn extends LitElement {
     this.is_loading = true;
 
     try {
+      // Chỉ clear trial mode nếu đây là login THẬT (không phải từ trial button)
+      if (!isTrial) {
+        clearTrialMode();
+      }
+      
       await this._logic.handleLogin(this.usr_name, this.pwd);
       // 💫 5. Nếu thành công, chuyển hướng đến /home
       this._logic.navigateTo('/home');
@@ -779,17 +851,24 @@ export class UiAuthLoginScn extends LitElement {
     }
   }
 
-  // 🌐 Handle Language Change
-  private _onLanguageChange(lang: Language) {
-    this.language = lang;
-    setLanguage(lang); // Sử dụng utility để set và dispatch event
+  // 🌐 Handle Language Toggle (Switch between vi and en)
+  private _onLanguageToggle() {
+    const newLang = this.language === 'vi' ? 'en' : 'vi';
+    this.language = newLang;
+    setLanguage(newLang); // Sử dụng utility để set và dispatch event
+  }
+
+  // 🌗 Handle Theme Toggle
+  private _onThemeToggle() {
+    this.theme = toggleTheme(); // Toggle và apply theme
   }
 
   private _onTrialClick() {
     // 🎨 Xử lý đăng nhập dùng thử
-    this.usr_name = 'trial';
-    this.pwd = 'trial';
-    this._onLoginClick();
+    // Không sửa input mà user đã chọn, chỉ set trial mode và gọi login
+    setTrialMode(true);
+    // Truyền isTrial=true để không clear trial mode trong _onLoginClick
+    this._onLoginClick(true);
   }
 
   private _onForgotPwdNav() {
