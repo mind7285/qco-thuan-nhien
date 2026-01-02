@@ -1,0 +1,204 @@
+/* 🎨 Q-Layout Utility Classes - Grid 5px Base */
+
+/* ============================================
+   FLEX PARENT (Container)
+   ============================================ */
+
+/* Flex Column Parent */
+.q-flex-parent-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.q-flex-parent-column-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.q-flex-parent-column-space-between {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.q-flex-parent-column-start {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.q-flex-parent-column-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* Flex Row Parent */
+.q-flex-parent-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.q-flex-parent-row-center {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.q-flex-parent-row-space-between {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.q-flex-parent-row-start {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.q-flex-parent-row-end {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+/* ============================================
+   FLEX CHILD (Items)
+   ============================================ */
+
+/* Flex Child - Column */
+.q-flex-child-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.q-flex-child-column-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.q-flex-child-column-start {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.q-flex-child-column-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* Flex Child - Row */
+.q-flex-child-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.q-flex-child-row-center {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.q-flex-child-row-start {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.q-flex-child-row-end {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+/* ============================================
+   FLEX GROW/SHRINK
+   ============================================ */
+
+.q-flex-grow {
+  flex: 1;
+  min-height: 0;
+}
+
+.q-flex-grow-0 {
+  flex-grow: 0;
+}
+
+.q-flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+.q-flex-auto {
+  flex: auto;
+}
+
+/* ============================================
+   GAP (Spacing - Grid 5px Base)
+   ============================================ */
+
+.q-gap-01x { gap: 5px; }    /* 1x = 5px */
+.q-gap-02x { gap: 10px; }   /* 2x = 10px */
+.q-gap-03x { gap: 15px; }   /* 3x = 15px */
+.q-gap-04x { gap: 20px; }   /* 4x = 20px */
+.q-gap-05x { gap: 25px; }   /* 5x = 25px (thay cho 24px) */
+.q-gap-06x { gap: 30px; }   /* 6x = 30px */
+.q-gap-08x { gap: 40px; }   /* 8x = 40px */
+.q-gap-10x { gap: 50px; }   /* 10x = 50px */
+.q-gap-12x { gap: 60px; }   /* 12x = 60px */
+
+/* ============================================
+   WIDTH
+   ============================================ */
+
+.q-w-full { width: 100%; }
+.q-w-auto { width: auto; }
+
+/* ============================================
+   HEIGHT
+   ============================================ */
+
+.q-h-full { height: 100%; }
+.q-h-auto { height: auto; }
+.q-min-h-0 { min-height: 0; }
+
+/* ============================================
+   ALIGNMENT (Items)
+   ============================================ */
+
+.q-items-center { align-items: center; }
+.q-items-start { align-items: flex-start; }
+.q-items-end { align-items: flex-end; }
+.q-items-stretch { align-items: stretch; }
+
+/* ============================================
+   JUSTIFY CONTENT
+   ============================================ */
+
+.q-justify-center { justify-content: center; }
+.q-justify-start { justify-content: flex-start; }
+.q-justify-end { justify-content: flex-end; }
+.q-justify-between { justify-content: space-between; }
+.q-justify-around { justify-content: space-around; }
+.q-justify-evenly { justify-content: space-evenly; }
+
+/* ============================================
+   MARGIN AUTO (Push to edges)
+   ============================================ */
+
+.q-mt-auto { margin-top: auto; }
+.q-mb-auto { margin-bottom: auto; }
+.q-ml-auto { margin-left: auto; }
+.q-mr-auto { margin-right: auto; }
+.q-mx-auto { margin-left: auto; margin-right: auto; }
+.q-my-auto { margin-top: auto; margin-bottom: auto; }
+

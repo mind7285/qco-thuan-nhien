@@ -4,6 +4,7 @@ import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { Ui_Auth_Logic } from '../logic/ui-auth-logic';
 import { toast } from '@/core/utils/toast';
+import { qLayoutStyles } from '@/core/styles/q-layout';
 import logoUrl from '@/assets/images/core/TN-Logo.png';
 
 @customElement('ui-auth-login-scn')
@@ -19,11 +20,13 @@ export class UiAuthLoginScn extends LitElement {
   @state() show_password: boolean = false;
   @state() is_remember: boolean = false;
   @state() language: 'vi' | 'en' = (localStorage.getItem('app_language') as 'vi' | 'en') || 'vi';
+  @state() usr_name_error: string = ''; // Validation error cho username
+  @state() pwd_error: string = ''; // Validation error cho password
 
   // 🌐 Translations
   private translations = {
     vi: {
-      subtitle: 'Hệ thống quản lý cửa hàng THUẦN NHIÊN',
+      subtitle: 'Hệ thống bán hàng THUẦN NHIÊN',
       title: 'ĐĂNG NHẬP',
       usernameLabel: 'Tên đăng nhập',
       usernamePlaceholder: 'Nhập tên đăng nhập',
@@ -37,7 +40,7 @@ export class UiAuthLoginScn extends LitElement {
       clear: 'Xóa',
       showPassword: 'Hiện mật khẩu',
       hidePassword: 'Ẩn mật khẩu',
-      hotline: 'Hotline: 1900 xxxx',
+      hotline: 'Hotline: 0877 501 561',
     },
     en: {
       subtitle: 'THUAN NHIEN Store Management System',
@@ -54,7 +57,7 @@ export class UiAuthLoginScn extends LitElement {
       clear: 'Clear',
       showPassword: 'Show password',
       hidePassword: 'Hide password',
-      hotline: 'Hotline: 1900 xxxx',
+      hotline: 'Hotline: 0877 501 561',
     },
   };
 
@@ -64,7 +67,9 @@ export class UiAuthLoginScn extends LitElement {
   }
 
   // 🎨 Styles
-  static styles = css`
+  static styles = [
+    qLayoutStyles,
+    css`
     :host {
       display: block;
       width: 100%;
@@ -91,62 +96,9 @@ export class UiAuthLoginScn extends LitElement {
     }
 
     .card {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      min-height: 0;
       border: 1px solid #e5e7eb; /* Gray-200 - Border nhẹ để tạo separation */
       border-radius: 16px; /* Bo góc nhẹ cho mobile */
-    }
-
-    .form-section {
-      display: flex;
-      flex-direction: column;
-    }
-    /* ✨ Spacer Elements - Spacing Strategy (Base 5px) */
-    .q-gap-01x { height: 5px; flex-shrink: 0; }
-    .q-gap-02x { height: 10px; flex-shrink: 0; }
-    .q-gap-05x { height: 25px; flex-shrink: 0; }
-    .q-gap-10x { height: 50px; flex-shrink: 0; }
-    
-    /* ✨ Layout Architecture Elements */
-    .q-spacer-grow {
-      flex-grow: 1;
-      min-height: 25px; /* Minimum gap ensure separation */
-    }
-
-    .block-a {
-      /* Header Block */
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-    }
-
-    .block-b {
-      /* Body Block */
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-    }
-
-    .block-z {
-      /* Footer Block */
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-    }
-
-    .form-section {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .action-section {
-      display: flex;
-      flex-direction: column;
+      /* Layout utilities: q-flex-parent-column q-flex-parent-column-space-between q-gap-05x q-w-full q-flex-grow q-min-h-0 */
     }
 
     .logo {
@@ -178,16 +130,27 @@ export class UiAuthLoginScn extends LitElement {
       margin: 0; /* Margin-Bottom: 0px */
     }
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
     .form-label {
       font-weight: 500;
       color: #374151; /* Gray-700 */
       font-size: 14px;
+      line-height: 1.5; /* Cố định line-height để tránh giật */
+      margin: 0; /* Cố định margin để tránh giật */
+      padding: 0; /* Cố định padding để tránh giật */
+      display: block; /* Cố định display */
+      transition: color 0.2s;
+      text-align: left; /* Giữ nguyên left align */
+      background-color: transparent; /* Background giữ nguyên (transparent) */
+    }
+
+    .form-label.error {
+      color: #ef4444; /* Red - Error color (chỉ text đỏ) */
+      line-height: 1.5; /* Giữ nguyên line-height */
+      margin: 0; /* Giữ nguyên margin */
+      padding: 0; /* Giữ nguyên padding */
+      display: block; /* Giữ nguyên display */
+      text-align: left; /* Giữ nguyên left align */
+      background-color: transparent; /* Background giữ nguyên (transparent) */
     }
 
     .input-wrapper {
@@ -440,8 +403,7 @@ export class UiAuthLoginScn extends LitElement {
         border: 1px solid #e5e7eb; /* Gray-200 */
         padding: 40px;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* Shadow-2XL */
-        display: flex;
-        flex-direction: column;
+        /* Layout utilities: q-flex-parent-column q-flex-parent-column-space-between q-gap-05x */
         overflow: hidden;
         overflow-y: auto;
       }
@@ -474,7 +436,8 @@ export class UiAuthLoginScn extends LitElement {
         margin-top: auto;
       }
     }
-  `;
+  `,
+  ];
 
   // ♻️ Lifecycle
   protected firstUpdated(_changedProperties: PropertyValues): void {
@@ -488,11 +451,9 @@ export class UiAuthLoginScn extends LitElement {
   render() {
     return html`
       <div class="container">
-        <div class="card">
+        <div class="card q-flex-parent-column q-flex-parent-column-space-between q-gap-05x q-w-full q-flex-grow q-min-h-0">
           ${this._renderBlockA()}
-          <div class="q-spacer-grow"></div>
           ${this._renderBlockB()}
-          <div class="q-spacer-grow"></div>
           ${this._renderBlockZ()}
         </div>
       </div>
@@ -502,7 +463,7 @@ export class UiAuthLoginScn extends LitElement {
   // 🅰️ Render Block A (Header)
   private _renderBlockA() {
     return html`
-      <div class="block-a">
+      <div class="block-a q-flex-child-column q-flex-child-column-center q-w-full q-flex-shrink-0">
         <div class="logo">
           <img src="${logoUrl}" alt="TN Logo" />
         </div>
@@ -520,14 +481,11 @@ export class UiAuthLoginScn extends LitElement {
   // 🅱️ Render Block B (Body)
   private _renderBlockB() {
     return html`
-      <div class="block-b">
+      <div class="block-b q-flex-child-column q-flex-grow q-justify-center q-w-full q-gap-05x">
         <h2 class="title">${this.t('title')}</h2>
-        <div class="q-gap-05x"></div>
         ${this._renderFormSection()}
         <!-- ⏸️ Tạm ẩn: Ghi nhớ đăng nhập (Browser đã hỗ trợ Remember Password) -->
-        <!-- <div class="q-gap-05x"></div> -->
         <!-- ${this._renderRememberCheckbox()} -->
-        <div class="q-gap-05x"></div>
         ${this._renderActionSection()}
       </div>
     `;
@@ -536,9 +494,8 @@ export class UiAuthLoginScn extends LitElement {
   // 📝 Render Form Section
   private _renderFormSection() {
     return html`
-      <div class="form-section">
+      <div class="form-section q-flex-child-column q-gap-05x">
         ${this._renderUsernameInput()}
-        <div class="q-gap-05x"></div>
         ${this._renderPasswordInput()}
       </div>
     `;
@@ -546,18 +503,23 @@ export class UiAuthLoginScn extends LitElement {
 
   // 👤 Render Username Input
   private _renderUsernameInput() {
+    const hasError = !!this.usr_name_error;
     return html`
-      <div class="form-group">
-        <label class="form-label">${this.t('usernameLabel')}</label>
-        <div class="q-gap-01x"></div>
+      <div class="form-group q-flex-child-column q-gap-02x">
+        <label class="form-label ${hasError ? 'error' : ''}">${this.t('usernameLabel')}</label>
         <div class="input-wrapper">
           <span class="input-icon">person</span>
           <input
+            id="username-input"
             class="form-input ${this.usr_name ? 'has-suffix' : ''}"
             type="text"
             .value="${this.usr_name}"
             @input="${(e: Event) => {
         this.usr_name = (e.target as HTMLInputElement).value;
+        // Clear error khi user nhập đúng
+        if (this.usr_name_error && this.usr_name.trim().length >= 3) {
+          this.usr_name_error = '';
+        }
       }}"
             placeholder="${this.t('usernamePlaceholder')}"
             autofocus
@@ -570,18 +532,23 @@ export class UiAuthLoginScn extends LitElement {
 
   // 🔐 Render Password Input
   private _renderPasswordInput() {
+    const hasError = !!this.pwd_error;
     return html`
-      <div class="form-group">
-        <label class="form-label">${this.t('passwordLabel')}</label>
-        <div class="q-gap-01x"></div>
+      <div class="form-group q-flex-child-column q-gap-02x">
+        <label class="form-label ${hasError ? 'error' : ''}">${this.t('passwordLabel')}</label>
         <div class="input-wrapper">
           <span class="input-icon">lock</span>
           <input
+            id="password-input"
             class="form-input ${this.pwd ? 'has-double-suffix' : ''}"
             type="${this.show_password ? 'text' : 'password'}"
             .value="${this.pwd}"
             @input="${(e: Event) => {
         this.pwd = (e.target as HTMLInputElement).value;
+        // Clear error khi user nhập đúng
+        if (this.pwd_error && this.pwd.trim().length >= 6) {
+          this.pwd_error = '';
+        }
       }}"
             placeholder="${this.t('passwordPlaceholder')}"
           />
@@ -662,7 +629,7 @@ export class UiAuthLoginScn extends LitElement {
   // 🎯 Render Action Section
   private _renderActionSection() {
     return html`
-      <div class="action-section">
+      <div class="action-section q-flex-child-column">
         ${this._renderButtonsRow()}
         <!-- ⏸️ Tạm ẩn: Quên mật khẩu và Đăng ký ngay -->
         <!-- <div class="q-gap-05x"></div> -->
@@ -706,9 +673,9 @@ export class UiAuthLoginScn extends LitElement {
   // 💤 Render Block Z (Footer)
   private _renderBlockZ() {
     return html`
-      <div class="block-z">
+      <div class="block-z q-flex-child-column q-flex-child-column-center q-w-full q-flex-shrink-0">
         <div class="footer">
-          <div class="footer-version">© 2024 QueenCode - v1.0.0</div>
+          <div class="footer-version">© 2026 QueenCode - v1.0.0</div>
           <div class="footer-support">
             <span>📞</span>
             <span>${this.t('hotline')}</span>
@@ -730,8 +697,69 @@ export class UiAuthLoginScn extends LitElement {
     `;
   }
 
+  // ✅ Validation
+  private _validateForm(): { isValid: boolean; firstErrorField: 'username' | 'password' | null } {
+    // Clear previous errors
+    this.usr_name_error = '';
+    this.pwd_error = '';
+
+    let isValid = true;
+    let firstErrorField: 'username' | 'password' | null = null;
+
+    // Validate username
+    if (!this.usr_name || this.usr_name.trim().length === 0) {
+      this.usr_name_error = this.language === 'vi' ? 'Vui lòng nhập tên đăng nhập' : 'Please enter username';
+      isValid = false;
+      if (!firstErrorField) firstErrorField = 'username';
+    } else if (this.usr_name.trim().length < 3) {
+      this.usr_name_error = this.language === 'vi' ? 'Tên đăng nhập phải có ít nhất 3 ký tự' : 'Username must be at least 3 characters';
+      isValid = false;
+      if (!firstErrorField) firstErrorField = 'username';
+    }
+
+    // Validate password
+    if (!this.pwd || this.pwd.trim().length === 0) {
+      this.pwd_error = this.language === 'vi' ? 'Vui lòng nhập mật khẩu' : 'Please enter password';
+      isValid = false;
+      if (!firstErrorField) firstErrorField = 'password';
+    } else if (this.pwd.trim().length < 6) {
+      this.pwd_error = this.language === 'vi' ? 'Mật khẩu phải có ít nhất 6 ký tự' : 'Password must be at least 6 characters';
+      isValid = false;
+      if (!firstErrorField) firstErrorField = 'password';
+    }
+
+    // Trả về field đầu tiên có lỗi để focus sau
+    return { isValid, firstErrorField };
+  }
+
+  // 🎯 Focus input khi có lỗi (chỉ focus, không select để tránh nhảy nhảy)
+  private _focusInput(field: 'username' | 'password'): void {
+    // Đợi DOM update và Toast hiển thị (sau khi state thay đổi)
+    setTimeout(() => {
+      const inputId = field === 'username' ? 'username-input' : 'password-input';
+      const input = this.shadowRoot?.querySelector(`#${inputId}`) as HTMLInputElement;
+      if (input) {
+        input.focus(); // Chỉ focus, không select để tránh nhảy nhảy
+      }
+    }, 100); // Đợi Toast hiển thị xong
+  }
+
   // 🎨 Events
   private async _onLoginClick() {
+    // Validate trước khi gọi API
+    const validation = this._validateForm();
+    if (!validation.isValid) {
+      const errorMsg = this.language === 'vi' 
+        ? 'Vui lòng kiểm tra lại thông tin đăng nhập'
+        : 'Please check your login information';
+      toast.error(errorMsg);
+      // Focus vào input đầu tiên có lỗi sau khi Toast hiển thị
+      if (validation.firstErrorField) {
+        this._focusInput(validation.firstErrorField);
+      }
+      return;
+    }
+
     this.errorMessage = '';
     this.is_loading = true;
 
@@ -744,6 +772,9 @@ export class UiAuthLoginScn extends LitElement {
       this.errorMessage = errorMsg; // Giữ lại để tương thích
       // Hiển thị Toast thay vì error message inline
       toast.error(errorMsg);
+      
+      // Focus vào password input sau khi Toast hiển thị (vì thường là lỗi mật khẩu)
+      this._focusInput('password');
     } finally {
       this.is_loading = false;
     }

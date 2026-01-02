@@ -2,6 +2,9 @@
 // 🇺🇸 Main entry point
 import { Router, type Route } from './core/router/router';
 
+// 🎨 Q-Layout Utility Classes được import trong từng component (LitElement Shadow DOM)
+// Không cần import global CSS vì LitElement sử dụng Shadow DOM
+
 // ⚡️ Import các component để đảm bảo custom elements được đăng ký
 // Import trực tiếp từ file để decorator @customElement được thực thi
 import './features/auth/ui/screens/ui-auth-login-scn';
