@@ -6,6 +6,7 @@ import { UiShellSidebarWgt } from '../components/ui-shell-sidebar-wgt';
 import { UiShellHeaderWgt } from '../components/ui-shell-header-wgt';
 import { Ui_Shell_Logic } from '../logic/ui-shell-logic';
 import { S_Api_Shell } from '../../services';
+import { useI18n } from '@/core/utils/i18n';
 import type { M_Tb_Shell_Mod } from '../../data/models';
 
 @customElement('ui-shell-scn')
@@ -15,6 +16,9 @@ export class UiShellScn extends LitElement {
 
   // 🔌 Service Injection
   private _shellService: S_Api_Shell = new S_Api_Shell();
+
+  // 🌐 i18n
+  private i18n = useI18n();
 
   // 🍃 Internal State
   @state() isSidebarOpen: boolean = true;
@@ -167,7 +171,14 @@ export class UiShellScn extends LitElement {
   // 💎 Helper
   private _getCurrentModuleTitle(): string {
     const module = this.modules.find((m) => m.c_mod_id === this.currentModule);
-    return module?.c_title || 'POS System';
+    if (!module) {
+      return this.i18n.t('shell.defaultTitle');
+    }
+    // Thử lấy translation từ i18n trước, nếu không có thì dùng c_title từ database
+    const translationKey = `modules.${module.c_mod_id}`;
+    const translated = this.i18n.t(translationKey);
+    // Nếu translation trả về chính key (không tìm thấy), dùng c_title
+    return translated !== translationKey ? translated : module.c_title;
   }
 
   // 💎 Update current module from URL

@@ -6,6 +6,7 @@ import { Ui_Auth_Logic } from '../logic/ui-auth-logic';
 import { toast } from '@/core/utils/toast';
 import { qLayoutStyles } from '@/core/styles/q-layout';
 import { qSizeStyles } from '@/core/styles/q-size';
+import { getLanguage, setLanguage, type Language } from '@/core/utils/i18n';
 import logoUrl from '@/assets/images/core/TN-Logo.png';
 
 @customElement('ui-auth-login-scn')
@@ -20,7 +21,7 @@ export class UiAuthLoginScn extends LitElement {
   @state() errorMessage: string = '';
   @state() show_password: boolean = false;
   @state() is_remember: boolean = false;
-  @state() language: 'vi' | 'en' = (localStorage.getItem('app_language') as 'vi' | 'en') || 'vi';
+  @state() language: Language = getLanguage();
   @state() usr_name_error: string = ''; // Validation error cho username
   @state() pwd_error: string = ''; // Validation error cho password
 
@@ -779,9 +780,9 @@ export class UiAuthLoginScn extends LitElement {
   }
 
   // 🌐 Handle Language Change
-  private _onLanguageChange(lang: 'vi' | 'en') {
+  private _onLanguageChange(lang: Language) {
     this.language = lang;
-    localStorage.setItem('app_language', lang);
+    setLanguage(lang); // Sử dụng utility để set và dispatch event
   }
 
   private _onTrialClick() {

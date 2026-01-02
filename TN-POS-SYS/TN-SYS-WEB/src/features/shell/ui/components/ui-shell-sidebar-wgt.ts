@@ -1,8 +1,9 @@
 // 🇻🇳 Sidebar chứa menu điều hướng giữa các module
 // 🇺🇸 Sidebar containing navigation menu between modules
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, html, css, PropertyValues } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
+import { useI18n, type Language } from '@/core/utils/i18n';
 import type { M_Tb_Shell_Mod } from '../../data/models';
 
 @customElement('ui-shell-sidebar-wgt')
@@ -12,6 +13,10 @@ export class UiShellSidebarWgt extends LitElement {
   
   // 🍃 Module đang được chọn
   @property({ type: String }) currentModule: string = '';
+
+  // 🌐 i18n
+  private i18n = useI18n();
+  @state() language: Language = this.i18n.language;
 
   // 🎨 Styles
   static styles = css`
@@ -51,6 +56,36 @@ export class UiShellSidebarWgt extends LitElement {
     }
   `;
 
+  // ♻️ Lifecycle
+  protected firstUpdated(_changedProperties: PropertyValues): void {
+    super.firstUpdated(_changedProperties);
+    // Listen to language change events
+    window.addEventListener('languagechange', this._onLanguageChange);
+    // Update language from localStorage
+    this.language = this.i18n.language;
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    window.removeEventListener('languagechange', this._onLanguageChange);
+  }
+
+  // 🌐 Handle language change
+  private _onLanguageChange = (e: Event) => {
+    const event = e as CustomEvent<{ language: Language }>;
+    this.language = event.detail.language;
+    this.i18n = useI18n(); // Re-initialize i18n
+  };
+
+  // 🌐 Get translated module title
+  private _getModuleTitle(mod: M_Tb_Shell_Mod): string {
+    // Thử lấy translation từ i18n trước, nếu không có thì dùng c_title từ database
+    const translationKey = `modules.${mod.c_mod_id}`;
+    const translated = this.i18n.t(translationKey);
+    // Nếu translation trả về chính key (không tìm thấy), dùng c_title
+    return translated !== translationKey ? translated : mod.c_title;
+  }
+
   // 🏙️ Render
   render() {
     return html`
@@ -64,7 +99,7 @@ export class UiShellSidebarWgt extends LitElement {
               @click="${() => this._onModClick(mod.c_mod_id)}"
             >
               <span class="module-icon">${mod.c_icon || '📦'}</span>
-              <span>${mod.c_title}</span>
+              <span>${this._getModuleTitle(mod)}</span>
             </div>
           `
         )}

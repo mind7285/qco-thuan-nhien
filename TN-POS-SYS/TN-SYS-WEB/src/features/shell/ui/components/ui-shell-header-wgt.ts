@@ -1,12 +1,17 @@
 // 🇻🇳 Header chứa thông tin module, thông báo và user menu
 // 🇺🇸 Header containing module information, notifications and user menu
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, html, css, PropertyValues } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
+import { useI18n, type Language } from '@/core/utils/i18n';
 
 @customElement('ui-shell-header-wgt')
 export class UiShellHeaderWgt extends LitElement {
   // 🏷️ Tiêu đề module hiện tại
   @property({ type: String }) title: string = '';
+
+  // 🌐 i18n
+  private i18n = useI18n();
+  @state() language: Language = this.i18n.language;
 
   // 🎨 Styles
   static styles = css`
@@ -50,14 +55,35 @@ export class UiShellHeaderWgt extends LitElement {
     }
   `;
 
+  // ♻️ Lifecycle
+  protected firstUpdated(_changedProperties: PropertyValues): void {
+    super.firstUpdated(_changedProperties);
+    // Listen to language change events
+    window.addEventListener('languagechange', this._onLanguageChange);
+    // Update language from localStorage
+    this.language = this.i18n.language;
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    window.removeEventListener('languagechange', this._onLanguageChange);
+  }
+
+  // 🌐 Handle language change
+  private _onLanguageChange = (e: Event) => {
+    const event = e as CustomEvent<{ language: Language }>;
+    this.language = event.detail.language;
+    this.i18n = useI18n(); // Re-initialize i18n
+  };
+
   // 🏙️ Render
   render() {
     return html`
       <div class="header">
-        <div class="title">${this.title || 'POS System'}</div>
+        <div class="title">${this.title || this.i18n.t('shell.defaultTitle')}</div>
         <div class="actions">
           <button class="logout-btn" @click="${this._onLogout}">
-            Đăng xuất
+            ${this.i18n.t('shell.logout')}
           </button>
         </div>
       </div>

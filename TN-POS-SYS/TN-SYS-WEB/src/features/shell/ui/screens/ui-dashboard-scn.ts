@@ -1,10 +1,15 @@
 // 🇻🇳 Màn hình Dashboard / Trang chủ
 // 🇺🇸 Dashboard / Home screen
-import { LitElement, html, css } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { LitElement, html, css, PropertyValues } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { useI18n, type Language } from '@/core/utils/i18n';
 
 @customElement('ui-dashboard-scn')
 export class UiDashboardScn extends LitElement {
+  // 🌐 i18n
+  private i18n = useI18n();
+  @state() language: Language = this.i18n.language;
+
   // 🎨 Styles
   static styles = css`
     :host {
@@ -38,17 +43,35 @@ export class UiDashboardScn extends LitElement {
     }
   `;
 
+  // ♻️ Lifecycle
+  protected firstUpdated(_changedProperties: PropertyValues): void {
+    super.firstUpdated(_changedProperties);
+    // Listen to language change events
+    window.addEventListener('languagechange', this._onLanguageChange);
+    // Update language from localStorage
+    this.language = this.i18n.language;
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    window.removeEventListener('languagechange', this._onLanguageChange);
+  }
+
+  // 🌐 Handle language change
+  private _onLanguageChange = (e: Event) => {
+    const event = e as CustomEvent<{ language: Language }>;
+    this.language = event.detail.language;
+    this.i18n = useI18n(); // Re-initialize i18n
+  };
+
   // 🏙️ Render
   render() {
     return html`
       <div class="dashboard-container">
         <div class="welcome-card">
-          <h1 class="welcome-title">🇻🇳 Chào mừng đến với TN POS System</h1>
+          <h1 class="welcome-title">${this.i18n.t('dashboard.welcome')}</h1>
           <p class="welcome-text">
-            🇺🇸 Welcome to TN POS System
-          </p>
-          <p class="welcome-text">
-            Đây là màn hình Dashboard. Các tính năng đang được phát triển...
+            ${this.i18n.t('dashboard.description')}
           </p>
         </div>
       </div>
