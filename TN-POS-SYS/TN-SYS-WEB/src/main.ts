@@ -29,6 +29,8 @@ import './features/shell/ui/screens/ui-pos-scn';
 import './features/shell/ui/screens/ui-inv-scn';
 import './features/shell/ui/screens/ui-rpt-scn';
 import './features/shell/ui/screens/ui-cfg-scn';
+import './features/shell/ui/screens/ui-cfg-ui-scn';
+import './features/shell/ui/screens/ui-auth-perms-scn';
 import './features/shell/ui/screens/ui-crm-scn';
 
 // ⚡️ Khởi tạo router
@@ -110,6 +112,16 @@ const routes: Route[] = [
     requiresAuth: true,
   },
   {
+    path: '/auth/permissions',
+    handler: () => {
+      const shell = document.createElement('ui-shell-scn');
+      const content = document.createElement('ui-auth-perms-scn');
+      shell.appendChild(content);
+      return shell as any;
+    },
+    requiresAuth: true,
+  },
+  {
     path: '/auth*',
     handler: () => {
       const shell = document.createElement('ui-shell-scn');
@@ -155,6 +167,16 @@ const routes: Route[] = [
     handler: () => {
       const shell = document.createElement('ui-shell-scn');
       const content = document.createElement('ui-rpt-scn');
+      shell.appendChild(content);
+      return shell as any;
+    },
+    requiresAuth: true,
+  },
+  {
+    path: '/cfg/ui',
+    handler: () => {
+      const shell = document.createElement('ui-shell-scn');
+      const content = document.createElement('ui-cfg-ui-scn');
       shell.appendChild(content);
       return shell as any;
     },

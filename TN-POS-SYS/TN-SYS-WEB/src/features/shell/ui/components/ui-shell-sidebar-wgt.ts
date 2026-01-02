@@ -3,7 +3,8 @@
 import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
-import { useI18n, type Language } from '@/core/utils/i18n';
+import { useI18n, type Language, setLanguage, getLanguage } from '@/core/utils/i18n';
+import { toggleTheme } from '@/core/utils/theme';
 import { qThemeStyles } from '@/core/styles/q-theme';
 import type { M_Tb_Shell_Mod } from '../../data/models';
 
@@ -83,10 +84,18 @@ export class UiShellSidebarWgt extends LitElement {
       color: var(--q-color-primary);
     }
 
+    :host-context(.dark) .module-item:hover {
+      color: #60a5fa;
+    }
+
     .module-item.active {
       background-color: var(--q-color-primary-light);
       color: var(--q-color-primary);
       font-weight: var(--q-font-weight-semibold);
+    }
+
+    :host-context(.dark) .module-item.active {
+      color: #60a5fa; /* Blue-400 cho độ sáng tốt hơn trong dark mode */
     }
     
     .module-item.active-root {
@@ -195,8 +204,8 @@ export class UiShellSidebarWgt extends LitElement {
     const groups = [
       { label: this.language === 'vi' ? 'Bàn làm việc' : 'Workspace', mods: topLevelModules.filter(m => m.c_mod_id === 'dashboard') },
       { label: this.language === 'vi' ? 'Nghiệp vụ' : 'Operations', mods: topLevelModules.filter(m => ['pos', 'inv', 'crm'].includes(m.c_mod_id)) },
-      { label: this.language === 'vi' ? 'Thống kê' : 'Statistics', mods: topLevelModules.filter(m => m.c_mod_id === 'rpt') },
-      { label: this.language === 'vi' ? 'Cấu hình' : 'Settings', mods: topLevelModules.filter(m => m.c_mod_id === 'cfg') },
+      { label: this.language === 'vi' ? 'Thống kê' : 'Statistics', mods: topLevelModules.filter(m => ['rpt-sales', 'rpt-inv', 'rpt-staff'].includes(m.c_mod_id)) },
+      { label: this.language === 'vi' ? 'Cấu hình' : 'Settings', mods: topLevelModules.filter(m => ['cfg-gen', 'auth', 'cfg-ui', 'sys-logs'].includes(m.c_mod_id)) },
     ];
 
     return html`
@@ -267,6 +276,18 @@ export class UiShellSidebarWgt extends LitElement {
   }
 
   private _onModClick(modId: string) {
+    // 🎨 Xử lý các action đặc biệt
+    if (modId === 'cfg-ui-theme') {
+      toggleTheme();
+      return;
+    }
+    
+    if (modId === 'cfg-ui-lang') {
+      const currentLang = getLanguage();
+      setLanguage(currentLang === 'vi' ? 'en' : 'vi');
+      return;
+    }
+
     this.dispatchEvent(
       new CustomEvent('mod-click', {
         detail: { modId },

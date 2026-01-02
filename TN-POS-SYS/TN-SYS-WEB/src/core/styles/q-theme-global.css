@@ -133,5 +133,9 @@
   /* Border */
   --q-color-border: #374151; /* Gray-700 */
   --q-color-border-light: #4b5563; /* Gray-600 */
+
+  /* Primary Variants for Dark Mode */
+  --q-color-primary-light: rgba(0, 123, 255, 0.15);
+  --q-color-primary-ring: rgba(0, 123, 255, 0.3);
 }
 
