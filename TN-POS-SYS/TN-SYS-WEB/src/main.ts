@@ -25,16 +25,31 @@ if (!appContainer) {
 
 const router = new Router(appContainer);
 
+// ⚡️ Helper function để kiểm tra authentication
+function isAuthenticated(): boolean {
+  if (typeof window === 'undefined') return false;
+  const token = localStorage.getItem('auth_token');
+  return !!token;
+}
+
 // ⚡️ Định nghĩa routes
 const routes: Route[] = [
-  // Root path - redirect to login
+  // Root path - redirect based on auth status
   {
     path: '/',
     handler: () => {
-      // Sử dụng replace để tránh thêm entry vào history
-      window.history.replaceState({}, '', '/auth/login');
-      const component = document.createElement('ui-auth-login-scn');
-      return component as any;
+      // Kiểm tra authentication
+      if (isAuthenticated()) {
+        // Đã login → redirect đến /home
+        window.history.replaceState({}, '', '/home');
+        const component = document.createElement('ui-shell-scn');
+        return component as any;
+      } else {
+        // Chưa login → redirect đến /auth/login
+        window.history.replaceState({}, '', '/auth/login');
+        const component = document.createElement('ui-auth-login-scn');
+        return component as any;
+      }
     },
   },
   

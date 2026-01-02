@@ -3,6 +3,7 @@
 import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { Ui_Auth_Logic } from '../logic/ui-auth-logic';
+import { toast } from '@/core/utils/toast';
 import logoUrl from '@/assets/images/core/TN-Logo.png';
 
 @customElement('ui-auth-login-scn')
@@ -17,6 +18,50 @@ export class UiAuthLoginScn extends LitElement {
   @state() errorMessage: string = '';
   @state() show_password: boolean = false;
   @state() is_remember: boolean = false;
+  @state() language: 'vi' | 'en' = (localStorage.getItem('app_language') as 'vi' | 'en') || 'vi';
+
+  // 🌐 Translations
+  private translations = {
+    vi: {
+      subtitle: 'Hệ thống quản lý cửa hàng THUẦN NHIÊN',
+      title: 'ĐĂNG NHẬP',
+      usernameLabel: 'Tên đăng nhập',
+      usernamePlaceholder: 'Nhập tên đăng nhập',
+      passwordLabel: 'Mật khẩu',
+      passwordPlaceholder: 'Nhập mật khẩu',
+      rememberMe: 'Ghi nhớ đăng nhập',
+      trialBtn: 'DÙNG THỬ',
+      loginBtn: 'ĐĂNG NHẬP',
+      loading: 'Đang xử lý...',
+      loginFailed: 'Đăng nhập thất bại',
+      clear: 'Xóa',
+      showPassword: 'Hiện mật khẩu',
+      hidePassword: 'Ẩn mật khẩu',
+      hotline: 'Hotline: 1900 xxxx',
+    },
+    en: {
+      subtitle: 'THUAN NHIEN Store Management System',
+      title: 'LOGIN',
+      usernameLabel: 'Username',
+      usernamePlaceholder: 'Enter username',
+      passwordLabel: 'Password',
+      passwordPlaceholder: 'Enter password',
+      rememberMe: 'Remember me',
+      trialBtn: 'TRY',
+      loginBtn: 'LOGIN',
+      loading: 'Processing...',
+      loginFailed: 'Login failed',
+      clear: 'Clear',
+      showPassword: 'Show password',
+      hidePassword: 'Hide password',
+      hotline: 'Hotline: 1900 xxxx',
+    },
+  };
+
+  // 🌐 Get translation
+  private t(key: keyof typeof this.translations.vi): string {
+    return this.translations[this.language][key];
+  }
 
   // 🎨 Styles
   static styles = css`
@@ -24,6 +69,7 @@ export class UiAuthLoginScn extends LitElement {
       display: block;
       width: 100%;
       height: 100vh;
+      font-family: Tahoma, Verdana, Arial, sans-serif;
     }
 
     /* 🧱 Utility Spacers */
@@ -41,6 +87,7 @@ export class UiAuthLoginScn extends LitElement {
       overflow-x: hidden;
       display: flex;
       flex-direction: column;
+      box-sizing: border-box; /* Padding được tính trong height */
     }
 
     .card {
@@ -49,6 +96,8 @@ export class UiAuthLoginScn extends LitElement {
       flex-direction: column;
       flex: 1;
       min-height: 0;
+      border: 1px solid #e5e7eb; /* Gray-200 - Border nhẹ để tạo separation */
+      border-radius: 16px; /* Bo góc nhẹ cho mobile */
     }
 
     .form-section {
@@ -60,6 +109,35 @@ export class UiAuthLoginScn extends LitElement {
     .q-gap-02x { height: 10px; flex-shrink: 0; }
     .q-gap-05x { height: 25px; flex-shrink: 0; }
     .q-gap-10x { height: 50px; flex-shrink: 0; }
+    
+    /* ✨ Layout Architecture Elements */
+    .q-spacer-grow {
+      flex-grow: 1;
+      min-height: 25px; /* Minimum gap ensure separation */
+    }
+
+    .block-a {
+      /* Header Block */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    .block-b {
+      /* Body Block */
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .block-z {
+      /* Footer Block */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
 
     .form-section {
       display: flex;
@@ -195,11 +273,11 @@ export class UiAuthLoginScn extends LitElement {
 
     .btn-primary {
       width: 100%;
-      height: 50px; /* All Devices: 50px */
+      height: 60px; /* 12x = 60px (5px * 12) */
       background-color: #007bff;
       color: white;
       border: none;
-      border-radius: 8px; /* Rounded-MD */
+      border-radius: 24px; /* Rounded-2XL - Bo góc gấp đôi */
       font-size: 16px;
       font-weight: 700; /* Bold */
       cursor: pointer;
@@ -217,11 +295,11 @@ export class UiAuthLoginScn extends LitElement {
 
     .btn-secondary {
       width: 100%;
-      height: 50px; /* All Devices: 50px */
+      height: 60px; /* 12x = 60px (5px * 12) */
       background-color: white;
       color: #007bff;
       border: 2px solid #007bff;
-      border-radius: 8px; /* Rounded-MD */
+      border-radius: 24px; /* Rounded-2XL - Bo góc gấp đôi */
       font-size: 16px;
       font-weight: 700; /* Bold */
       cursor: pointer;
@@ -330,10 +408,17 @@ export class UiAuthLoginScn extends LitElement {
       font-size: 20px;
       cursor: pointer;
       transition: transform 0.2s;
+      opacity: 0.6;
     }
 
     .lang-flag:hover {
       transform: scale(1.1);
+      opacity: 0.8;
+    }
+
+    .lang-flag.active {
+      opacity: 1;
+      transform: scale(1.15);
     }
 
     /* 💻 Desktop/Tablet: Gray bg, centered card */
@@ -341,14 +426,15 @@ export class UiAuthLoginScn extends LitElement {
       .container {
         background-color: #f3f4f6; /* Gray-100 */
         align-items: center;
-        justify-content: center;
+        justify-content: center; 
         padding: 24px;
+        box-sizing: border-box; /* Padding được tính trong height */
       }
 
       .card {
         width: 400px;
         min-height: 600px;
-        max-height: 850px; /* Hoặc 90vh */
+        max-height: 720px; /* Hoặc 90vh */
         background: white;
         border-radius: 32px; /* Bo cong như điện thoại */
         border: 1px solid #e5e7eb; /* Gray-200 */
@@ -370,11 +456,11 @@ export class UiAuthLoginScn extends LitElement {
       }
 
       .btn-primary {
-        height: 50px; /* All Devices: 50px */
+        height: 60px; /* 12x = 60px (5px * 12) */
       }
 
       .btn-secondary {
-        height: 50px; /* All Devices: 50px */
+        height: 60px; /* 12x = 60px (5px * 12) */
       }
 
       .actions {
@@ -403,158 +489,241 @@ export class UiAuthLoginScn extends LitElement {
     return html`
       <div class="container">
         <div class="card">
-          <div class="logo">
-            <img src="${logoUrl}" alt="TN Logo" />
+          ${this._renderBlockA()}
+          <div class="q-spacer-grow"></div>
+          ${this._renderBlockB()}
+          <div class="q-spacer-grow"></div>
+          ${this._renderBlockZ()}
+        </div>
+      </div>
+    `;
+  }
+
+  // 🅰️ Render Block A (Header)
+  private _renderBlockA() {
+    return html`
+      <div class="block-a">
+        <div class="logo">
+          <img src="${logoUrl}" alt="TN Logo" />
+        </div>
+        <p class="subtitle">${this.t('subtitle')}</p>
+      </div>
+    `;
+  }
+
+  // ⚠️ Render Error Message (Đã chuyển sang Toast, giữ lại để tương thích)
+  private _renderErrorMessage() {
+    // Không render nữa, sử dụng Toast thay thế
+    return '';
+  }
+
+  // 🅱️ Render Block B (Body)
+  private _renderBlockB() {
+    return html`
+      <div class="block-b">
+        <h2 class="title">${this.t('title')}</h2>
+        <div class="q-gap-05x"></div>
+        ${this._renderFormSection()}
+        <!-- ⏸️ Tạm ẩn: Ghi nhớ đăng nhập (Browser đã hỗ trợ Remember Password) -->
+        <!-- <div class="q-gap-05x"></div> -->
+        <!-- ${this._renderRememberCheckbox()} -->
+        <div class="q-gap-05x"></div>
+        ${this._renderActionSection()}
+      </div>
+    `;
+  }
+
+  // 📝 Render Form Section
+  private _renderFormSection() {
+    return html`
+      <div class="form-section">
+        ${this._renderUsernameInput()}
+        <div class="q-gap-05x"></div>
+        ${this._renderPasswordInput()}
+      </div>
+    `;
+  }
+
+  // 👤 Render Username Input
+  private _renderUsernameInput() {
+    return html`
+      <div class="form-group">
+        <label class="form-label">${this.t('usernameLabel')}</label>
+        <div class="q-gap-01x"></div>
+        <div class="input-wrapper">
+          <span class="input-icon">person</span>
+          <input
+            class="form-input ${this.usr_name ? 'has-suffix' : ''}"
+            type="text"
+            .value="${this.usr_name}"
+            @input="${(e: Event) => {
+        this.usr_name = (e.target as HTMLInputElement).value;
+      }}"
+            placeholder="${this.t('usernamePlaceholder')}"
+            autofocus
+          />
+          ${this.usr_name ? this._renderUsernameSuffix() : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // 🔐 Render Password Input
+  private _renderPasswordInput() {
+    return html`
+      <div class="form-group">
+        <label class="form-label">${this.t('passwordLabel')}</label>
+        <div class="q-gap-01x"></div>
+        <div class="input-wrapper">
+          <span class="input-icon">lock</span>
+          <input
+            class="form-input ${this.pwd ? 'has-double-suffix' : ''}"
+            type="${this.show_password ? 'text' : 'password'}"
+            .value="${this.pwd}"
+            @input="${(e: Event) => {
+        this.pwd = (e.target as HTMLInputElement).value;
+      }}"
+            placeholder="${this.t('passwordPlaceholder')}"
+          />
+          ${this.pwd ? this._renderPasswordSuffix() : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // ✕ Render Username Suffix (Clear button)
+  private _renderUsernameSuffix() {
+    return html`
+      <div class="input-suffix">
+        <button
+          class="suffix-btn"
+          @click="${() => {
+        this.usr_name = '';
+      }}"
+          type="button"
+          title="${this.t('clear')}"
+          tabindex="-1"
+        >
+          ✕
+        </button>
+      </div>
+    `;
+  }
+
+  // 👁️ Render Password Suffix (Toggle visibility & Clear)
+  private _renderPasswordSuffix() {
+    return html`
+      <div class="input-suffix">
+        <button
+          class="suffix-btn"
+          @click="${() => {
+        this.show_password = !this.show_password;
+      }}"
+          type="button"
+          title="${this.show_password ? this.t('hidePassword') : this.t('showPassword')}"
+          tabindex="-1"
+        >
+          👁️
+        </button>
+        <button
+          class="suffix-btn"
+          @click="${() => {
+        this.pwd = '';
+      }}"
+          type="button"
+          title="${this.t('clear')}"
+          tabindex="-1"
+        >
+          ✕
+        </button>
+      </div>
+    `;
+  }
+
+  // ☑️ Render Remember Checkbox
+  private _renderRememberCheckbox() {
+    return html`
+      <div class="options-row">
+        <label class="checkbox-wrapper">
+          <input
+            type="checkbox"
+            class="checkbox-input"
+            .checked="${this.is_remember}"
+            @change="${(e: Event) => {
+        this.is_remember = (e.target as HTMLInputElement).checked;
+      }}"
+          />
+          <span class="checkbox-label">${this.t('rememberMe')}</span>
+        </label>
+      </div>
+    `;
+  }
+
+  // 🎯 Render Action Section
+  private _renderActionSection() {
+    return html`
+      <div class="action-section">
+        ${this._renderButtonsRow()}
+        <!-- ⏸️ Tạm ẩn: Quên mật khẩu và Đăng ký ngay -->
+        <!-- <div class="q-gap-05x"></div> -->
+        <!-- ${this._renderActionLinks()} -->
+      </div>
+    `;
+  }
+
+  // 🔘 Render Buttons Row
+  private _renderButtonsRow() {
+    return html`
+      <div class="buttons-row">
+        <button
+          class="btn-secondary"
+          ?disabled="${this.is_loading}"
+          @click="${this._onTrialClick}"
+        >
+          ${this.t('trialBtn')}
+        </button>
+        <button
+          class="btn-primary"
+          ?disabled="${this.is_loading}"
+          @click="${this._onLoginClick}"
+        >
+          ${this.is_loading ? this.t('loading') : this.t('loginBtn')}
+        </button>
+      </div>
+    `;
+  }
+
+  // 🔗 Render Action Links
+  private _renderActionLinks() {
+    return html`
+      <div class="actions">
+        <a class="link" @click="${this._onForgotPwdNav}">Quên mật khẩu?</a>
+        <a class="link" @click="${this._onRegisterNav}">Đăng ký ngay</a>
+      </div>
+    `;
+  }
+
+  // 💤 Render Block Z (Footer)
+  private _renderBlockZ() {
+    return html`
+      <div class="block-z">
+        <div class="footer">
+          <div class="footer-version">© 2024 QueenCode - v1.0.0</div>
+          <div class="footer-support">
+            <span>📞</span>
+            <span>${this.t('hotline')}</span>
           </div>
-          <h2 class="title">ĐĂNG NHẬP</h2>
-          
-          <!-- ✨ Spacer 02x (10px) -->
-          <div class="q-gap-02x"></div>
-          
-          <p class="subtitle">Hệ thống quản lý cửa hàng THUẦN NHIÊN</p>
-
-          ${this.errorMessage ? html`<div class="error">${this.errorMessage}</div>` : ''}
-
-          <!-- ✨ Spacer 2x (50px) -->
-          <div class="q-gap-2x"></div>
-
-          <div class="form-section">
-            <div class="form-group">
-              <label class="form-label">Tên đăng nhập</label>
-              <div class="input-wrapper">
-                <span class="input-icon">person</span>
-                <input
-                  class="form-input ${this.usr_name ? 'has-suffix' : ''}"
-                  type="text"
-                  .value="${this.usr_name}"
-                  @input="${(e: Event) => {
-                    this.usr_name = (e.target as HTMLInputElement).value;
-                  }}"
-                  placeholder="Nhập tên đăng nhập"
-                  autofocus
-                />
-                ${this.usr_name
-                  ? html`
-                      <div class="input-suffix">
-                        <button
-                          class="suffix-btn"
-                          @click="${() => {
-                            this.usr_name = '';
-                          }}"
-                          type="button"
-                          title="Xóa"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    `
-                  : ''}
-              </div>
-            </div>
-
-            <!-- ✨ Spacer 1x (25px) -->
-            <div class="q-gap-1x"></div>
-
-            <div class="form-group">
-              <label class="form-label">Mật khẩu</label>
-              <div class="input-wrapper">
-                <span class="input-icon">lock</span>
-                <input
-                  class="form-input ${this.pwd ? 'has-double-suffix' : ''}"
-                  type="${this.show_password ? 'text' : 'password'}"
-                  .value="${this.pwd}"
-                  @input="${(e: Event) => {
-                    this.pwd = (e.target as HTMLInputElement).value;
-                  }}"
-                  placeholder="Nhập mật khẩu"
-                />
-                ${this.pwd
-                  ? html`
-                      <div class="input-suffix">
-                        <button
-                          class="suffix-btn"
-                          @click="${() => {
-                            this.show_password = !this.show_password;
-                          }}"
-                          type="button"
-                          title="${this.show_password ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}"
-                        >
-                          👁️
-                        </button>
-                        <button
-                          class="suffix-btn"
-                          @click="${() => {
-                            this.pwd = '';
-                          }}"
-                          type="button"
-                          title="Xóa"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    `
-                  : ''}
-              </div>
-            </div>
-          </div>
-
-          <!-- ✨ Spacer 1x (25px) -->
-          <div class="q-gap-1x"></div>
-
-          <div class="options-row">
-            <label class="checkbox-wrapper">
-              <input
-                type="checkbox"
-                class="checkbox-input"
-                .checked="${this.is_remember}"
-                @change="${(e: Event) => {
-                  this.is_remember = (e.target as HTMLInputElement).checked;
-                }}"
-              />
-              <span class="checkbox-label">Ghi nhớ đăng nhập</span>
-            </label>
-          </div>
-
-          <!-- ✨ Spacer 1x (25px) -->
-          <div class="q-gap-1x"></div>
-
-          <div class="action-section">
-            <div class="buttons-row">
-              <button
-                class="btn-secondary"
-                ?disabled="${this.is_loading}"
-                @click="${this._onTrialClick}"
-              >
-                DÙNG THỬ
-              </button>
-              <button
-                class="btn-primary"
-                ?disabled="${this.is_loading}"
-                @click="${this._onLoginClick}"
-              >
-                ${this.is_loading ? 'Đang xử lý...' : 'ĐĂNG NHẬP'}
-              </button>
-            </div>
-
-            <!-- ✨ Spacer 1x (25px) -->
-            <div class="q-gap-1x"></div>
-
-            <div class="actions">
-              <a class="link" @click="${this._onForgotPwdNav}">Quên mật khẩu?</a>
-              <a class="link" @click="${this._onRegisterNav}">Đăng ký ngay</a>
-            </div>
-          </div>
-
-          <div class="footer">
-            <div class="footer-version">© 2024 QueenCode - v1.0.0</div>
-            <div class="footer-support">
-              <span>📞</span>
-              <span>Hotline: 1900 xxxx</span>
-            </div>
-            <div class="footer-lang">
-              <span class="lang-flag" title="Tiếng Việt">🇻🇳</span>
-              <span class="lang-flag" title="English">🇺🇸</span>
-            </div>
+          <div class="footer-lang">
+            <span 
+              class="lang-flag ${this.language === 'vi' ? 'active' : ''}" 
+              title="Tiếng Việt"
+              @click="${() => this._onLanguageChange('vi')}"
+            >🇻🇳</span>
+            <span 
+              class="lang-flag ${this.language === 'en' ? 'active' : ''}" 
+              title="English"
+              @click="${() => this._onLanguageChange('en')}"
+            >🇺🇸</span>
           </div>
         </div>
       </div>
@@ -571,10 +740,19 @@ export class UiAuthLoginScn extends LitElement {
       // 💫 5. Nếu thành công, chuyển hướng đến /home
       this._logic.navigateTo('/home');
     } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Đăng nhập thất bại';
+      const errorMsg = error instanceof Error ? error.message : this.t('loginFailed');
+      this.errorMessage = errorMsg; // Giữ lại để tương thích
+      // Hiển thị Toast thay vì error message inline
+      toast.error(errorMsg);
     } finally {
       this.is_loading = false;
     }
+  }
+
+  // 🌐 Handle Language Change
+  private _onLanguageChange(lang: 'vi' | 'en') {
+    this.language = lang;
+    localStorage.setItem('app_language', lang);
   }
 
   private _onTrialClick() {
@@ -592,4 +770,3 @@ export class UiAuthLoginScn extends LitElement {
     this._logic.navigateTo('/auth/register');
   }
 }
-
