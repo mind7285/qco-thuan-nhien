@@ -1,0 +1,80 @@
+=== CÁC THÔNG BÁO LỖI TRONG CODE ===
+
+1. LỖI KẾT NỐI SERVER (macOS/Linux/Windows):
+Không thể kết nối đến server. Vui lòng kiểm tra:
+• Server đã chạy chưa? (cd TN-SYS-API/src && make run)
+• Server có đang listen trên port 3000 không?
+• Firewall có chặn kết nối không?
+📱 macOS/Linux/Windows: Đang dùng 127.0.0.1:3000
+   Kiểm tra server: lsof -i :3000 hoặc curl http://127.0.0.1:3000/api/v1/shell/config
+• Đường truyền mạng có ổn định không?
+
+2. LỖI KẾT NỐI SERVER (Android):
+Không thể kết nối đến server. Vui lòng kiểm tra:
+• Server đã chạy chưa? (cd TN-SYS-API/src && make run)
+• Server có đang listen trên port 3000 không?
+• Firewall có chặn kết nối không?
+📱 Android: Đang dùng 10.0.2.2:3000 (emulator)
+• Đường truyền mạng có ổn định không?
+
+3. LỖI KẾT NỐI SERVER (iOS):
+Không thể kết nối đến server. Vui lòng kiểm tra:
+• Server đã chạy chưa? (cd TN-SYS-API/src && make run)
+• Server có đang listen trên port 3000 không?
+• Firewall có chặn kết nối không?
+📱 iOS: Đang dùng localhost:3000 (simulator)
+• Đường truyền mạng có ổn định không?
+
+4. LỖI XÁC THỰC:
+Tên đăng nhập hoặc mật khẩu không đúng
+
+5. LỖI SERVER:
+Lỗi server. Vui lòng thử lại sau
+
+6. LỖI TIMEOUT:
+Connection timeout. Vui lòng kiểm tra kết nối mạng
+
+7. LỖI KẾT NỐI (SocketException):
+Connection failed: [chi tiết lỗi]
+
+8. LỖI VALIDATION - ĐĂNG NHẬP:
+Vui lòng nhập đầy đủ thông tin
+
+9. LỖI VALIDATION - ĐĂNG KÝ:
+Vui lòng nhập đầy đủ thông tin
+
+10. LỖI VALIDATION - EMAIL:
+Email không hợp lệ
+
+11. LỖI VALIDATION - QUÊN MẬT KHẨU:
+Email không hợp lệ
+
+12. LỖI VALIDATION - FORM USER:
+Vui lòng nhập đầy đủ thông tin
+
+13. LỖI VALIDATION - FORM ROLE:
+Vui lòng nhập đầy đủ thông tin
+
+14. LỖI HTTP:
+HTTP [status_code]: [response_body]
+
+15. LỖI LOGIN FAILED:
+Login failed
+
+16. LỖI XÓA USER:
+Lỗi khi xóa người dùng
+
+17. LỖI XÓA ROLE:
+Lỗi khi xóa vai trò
+
+18. LỖI ĐỒNG BỘ QUYỀN:
+Lỗi khi đồng bộ quyền
+
+19. LỖI ĐĂNG XUẤT:
+Lỗi đăng xuất: [chi tiết lỗi]
+
+20. LỖI KHÔNG XÁC ĐỊNH:
+Lỗi: [chi tiết lỗi]
+
+Lỗi: Không xác định
+

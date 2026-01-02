@@ -1,5 +1,7 @@
 // 🇻🇳 Provider quản lý trạng thái Auth
 // 🇺🇸 Auth state management provider
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/m_tb_auth_usr.dart';
 import '../../services/s_api_auth.dart';
@@ -69,10 +71,46 @@ class UiAuthLoginLogic extends StateNotifier<UiAuthLoginState> {
 
       state = state.copyWith(isLoading: false);
       return user;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      // 💫 Log lỗi chi tiết nếu đang debug
+      if (kDebugMode) {
+        print('❌ ERROR handleLogin: $e');
+        print('❌ StackTrace: $stackTrace');
+      }
+
+      // 💫 Xử lý lỗi và hiển thị thông báo thân thiện
+      String errorMessage;
+      final errorStr = e.toString();
+      
+      if (e is SocketException || errorStr.contains('Connection failed') || errorStr.contains('SocketException')) {
+        final platform = Platform.operatingSystem;
+        String platformHint = '';
+        
+        if (platform == 'macos' || platform == 'linux' || platform == 'windows') {
+          platformHint = '\n📱 macOS/Linux/Windows: Đang dùng 127.0.0.1:3000\n'
+              '   Kiểm tra server: lsof -i :3000 hoặc curl http://127.0.0.1:3000/api/v1/shell/config';
+        } else if (platform == 'android') {
+          platformHint = '\n📱 Android: Đang dùng 10.0.2.2:3000 (emulator)';
+        } else if (platform == 'ios') {
+          platformHint = '\n📱 iOS: Đang dùng localhost:3000 (simulator)';
+        }
+        
+        errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra:\n'
+            '• Server đã chạy chưa? (cd TN-SYS-API/src && make run)\n'
+            '• Server có đang listen trên port 3000 không?\n'
+            '• Firewall có chặn kết nối không?$platformHint\n'
+            '• Đường truyền mạng có ổn định không?';
+      } else if (errorStr.contains('HTTP 40') || errorStr.contains('HTTP 401')) {
+        errorMessage = 'Tên đăng nhập hoặc mật khẩu không đúng';
+      } else if (errorStr.contains('HTTP 50')) {
+        errorMessage = 'Lỗi server. Vui lòng thử lại sau';
+      } else {
+        errorMessage = 'Lỗi: $errorStr';
+      }
+      
       state = state.copyWith(
         isLoading: false,
-        errorMessage: e.toString(),
+        errorMessage: errorMessage,
       );
       return null;
     }
@@ -179,7 +217,11 @@ class UiAuthRegisterLogic extends StateNotifier<UiAuthRegisterState> {
       final userId = await authService.register(usr);
       state = state.copyWith(isLoading: false);
       return userId;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print('❌ ERROR handleRegister: $e');
+        print('❌ StackTrace: $stackTrace');
+      }
       state = state.copyWith(
         isLoading: false,
         errorMessage: e.toString(),
@@ -257,7 +299,11 @@ class UiAuthForgotPwdLogic extends StateNotifier<UiAuthForgotPwdState> {
         successMessage: 'Nếu email tồn tại trong hệ thống, chúng tôi đã gửi mã khôi phục.',
       );
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print('❌ ERROR handleForgotPwd: $e');
+        print('❌ StackTrace: $stackTrace');
+      }
       state = state.copyWith(
         isLoading: false,
         errorMessage: e.toString(),

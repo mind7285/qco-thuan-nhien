@@ -12,25 +12,54 @@ class S_Api_Auth {
   // 🇻🇳 Đăng nhập
   // 🇺🇸 Login
   Future<M_Tb_Auth_Usr> login(String usrName, String pwd) async {
-    final response = await apiClient.post<M_Tb_Auth_Usr>(
+    // Server trả về: { "user": {...}, "token": "..." }
+    final response = await apiClient.post<Map<String, dynamic>>(
       '/auth/login',
       body: {'usrName': usrName, 'pwd': pwd},
-      fromJson: (json) => M_Tb_Auth_Usr.fromJson(json),
+      fromJson: (json) => json, // Lấy raw map thay vì parse user ngay
     );
+
     if (response.data == null) {
-      throw Exception('Login failed');
+      throw Exception('Login failed: Empty response');
     }
-    return response.data!;
+
+    final data = response.data!;
+    
+    // Kiểm tra và lấy thông tin user
+    if (data['user'] == null) {
+      throw Exception('Login failed: User data missing');
+    }
+    
+    // Lấy token (để xử lý sau)
+    final token = data['token'] as String?;
+    if (token != null) {
+        print('🔑 Token received: ${token.substring(0, 10)}...');
+        // Lưu token vào secure storage
+        await apiClient.saveToken(token);
+    }
+
+    final userMap = data['user'] as Map<String, dynamic>;
+    return M_Tb_Auth_Usr.fromJson(userMap);
   }
 
   // 🇻🇳 Đăng xuất
   // 🇺🇸 Logout
   Future<bool> logout() async {
-    final response = await apiClient.post<bool>(
-      '/auth/logout',
-      fromJson: (json) => json['data'] as bool? ?? false,
-    );
-    return response.data ?? false;
+    try {
+      final response = await apiClient.post<bool>(
+        '/auth/logout',
+        fromJson: (json) => json['data'] as bool? ?? false,
+      );
+      
+      // Xóa token sau khi logout thành công
+      await apiClient.clearToken();
+      
+      return response.data ?? false;
+    } catch (e) {
+      // Dù API lỗi, vẫn xóa token để user thoát được
+      await apiClient.clearToken();
+      rethrow;
+    }
   }
 
   // 🇻🇳 Đăng ký
