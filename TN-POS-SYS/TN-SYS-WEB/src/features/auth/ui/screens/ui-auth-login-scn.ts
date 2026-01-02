@@ -5,6 +5,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { Ui_Auth_Logic } from '../logic/ui-auth-logic';
 import { toast } from '@/core/utils/toast';
 import { qLayoutStyles } from '@/core/styles/q-layout';
+import { qSizeStyles } from '@/core/styles/q-size';
 import logoUrl from '@/assets/images/core/TN-Logo.png';
 
 @customElement('ui-auth-login-scn')
@@ -69,6 +70,7 @@ export class UiAuthLoginScn extends LitElement {
   // 🎨 Styles
   static styles = [
     qLayoutStyles,
+    qSizeStyles,
     css`
     :host {
       display: block;
@@ -86,7 +88,6 @@ export class UiAuthLoginScn extends LitElement {
     .container {
       width: 100%;
       height: 100vh;
-      padding: 24px;
       background-color: white;
       overflow-y: auto;
       overflow-x: hidden;
@@ -96,9 +97,31 @@ export class UiAuthLoginScn extends LitElement {
     }
 
     .card {
-      border: 1px solid #e5e7eb; /* Gray-200 - Border nhẹ để tạo separation */
-      border-radius: 16px; /* Bo góc nhẹ cho mobile */
       /* Layout utilities: q-flex-parent-column q-flex-parent-column-space-between q-gap-05x q-w-full q-flex-grow q-min-h-0 */
+      /* Size utilities applied via classes in HTML */
+      border-color: #e5e7eb; /* Gray-200 */
+      box-sizing: border-box; /* Padding và border được tính trong width */
+    }
+
+    /* Mobile: Override desktop size classes to mobile values */
+    .card.q-width-450 {
+      width: 100%; /* Mobile: full width instead of 450px */
+    }
+
+    .card.q-min-h-600 {
+      min-height: auto; /* Mobile: no min-height */
+    }
+
+    .card.q-max-h-720 {
+      max-height: none; /* Mobile: no max-height */
+    }
+
+    .card.q-p-40 {
+      padding: 24px; /* Mobile: 24px instead of 40px */
+    }
+
+    .card.q-rounded-32 {
+      border-radius: 16px; /* Mobile: 16px instead of 32px */
     }
 
     .logo {
@@ -110,8 +133,6 @@ export class UiAuthLoginScn extends LitElement {
     }
 
     .logo img {
-      width: 125px; /* 5x = 125px (Mobile) */
-      height: 125px;
       object-fit: contain;
     }
 
@@ -161,7 +182,6 @@ export class UiAuthLoginScn extends LitElement {
 
     .input-icon {
       position: absolute;
-      left: 12px;
       font-size: 18px;
       color: #6b7280; /* Gray-500 */
       pointer-events: none;
@@ -182,22 +202,12 @@ export class UiAuthLoginScn extends LitElement {
 
     .form-input {
       width: 100%;
-      height: 50px; /* All Devices: 50px */
-      padding: 12px 40px 12px 40px;
       border: 1px solid #d1d5db; /* Gray-300 */
-      border-radius: 8px; /* Rounded-MD */
       font-size: 16px;
       box-sizing: border-box;
       transition: all 0.2s;
     }
 
-    .form-input.has-suffix {
-      padding-right: 80px;
-    }
-
-    .form-input.has-double-suffix {
-      padding-right: 100px;
-    }
 
     .form-input:focus {
       outline: none;
@@ -207,10 +217,8 @@ export class UiAuthLoginScn extends LitElement {
 
     .input-suffix {
       position: absolute;
-      right: 12px;
       display: flex;
       align-items: center;
-      gap: 8px;
     }
 
     .suffix-btn {
@@ -219,7 +227,6 @@ export class UiAuthLoginScn extends LitElement {
       cursor: pointer;
       color: #6b7280; /* Gray-500 */
       font-size: 18px;
-      padding: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -236,11 +243,9 @@ export class UiAuthLoginScn extends LitElement {
 
     .btn-primary {
       width: 100%;
-      height: 60px; /* 12x = 60px (5px * 12) */
       background-color: #007bff;
       color: white;
       border: none;
-      border-radius: 24px; /* Rounded-2XL - Bo góc gấp đôi */
       font-size: 16px;
       font-weight: 700; /* Bold */
       cursor: pointer;
@@ -258,11 +263,8 @@ export class UiAuthLoginScn extends LitElement {
 
     .btn-secondary {
       width: 100%;
-      height: 60px; /* 12x = 60px (5px * 12) */
       background-color: white;
       color: #007bff;
-      border: 2px solid #007bff;
-      border-radius: 24px; /* Rounded-2XL - Bo góc gấp đôi */
       font-size: 16px;
       font-weight: 700; /* Bold */
       cursor: pointer;
@@ -288,13 +290,10 @@ export class UiAuthLoginScn extends LitElement {
     .checkbox-wrapper {
       display: flex;
       align-items: center;
-      gap: 8px;
       cursor: pointer;
     }
 
     .checkbox-input {
-      width: 18px;
-      height: 18px;
       cursor: pointer;
       accent-color: #007bff;
     }
@@ -309,14 +308,12 @@ export class UiAuthLoginScn extends LitElement {
     .buttons-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
     }
 
     .actions {
       display: flex;
       flex-direction: column; /* 📱 Mobile: Flex-Column */
       align-items: center;
-      gap: 16px;
     }
 
     .link {
@@ -334,9 +331,8 @@ export class UiAuthLoginScn extends LitElement {
       color: #dc3545;
       font-size: 14px;
       text-align: center;
-      padding: 8px;
       background-color: #fee;
-      border-radius: 4px;
+      /* Size utilities: q-p-8 q-rounded-4 */
     }
 
     .footer {
@@ -344,8 +340,6 @@ export class UiAuthLoginScn extends LitElement {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
-      padding-top: 24px;
     }
 
     .footer-version {
@@ -363,8 +357,6 @@ export class UiAuthLoginScn extends LitElement {
 
     .footer-lang {
       display: flex;
-      gap: 8px;
-      margin-top: 4px;
     }
 
     .lang-flag {
@@ -390,39 +382,37 @@ export class UiAuthLoginScn extends LitElement {
         background-color: #f3f4f6; /* Gray-100 */
         align-items: center;
         justify-content: center; 
-        padding: 24px;
         box-sizing: border-box; /* Padding được tính trong height */
       }
 
       .card {
-        width: 400px;
-        min-height: 600px;
-        max-height: 720px; /* Hoặc 90vh */
         background: white;
-        border-radius: 32px; /* Bo cong như điện thoại */
-        border: 1px solid #e5e7eb; /* Gray-200 */
-        padding: 40px;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* Shadow-2XL */
         /* Layout utilities: q-flex-parent-column q-flex-parent-column-space-between q-gap-05x */
+        /* Size utilities: q-width-400 q-min-h-600 q-max-h-720 q-p-40 q-rounded-32 */
         overflow: hidden;
         overflow-y: auto;
       }
 
-      .logo img {
-        width: 150px; /* 6x = 150px (Desktop) */
-        height: 150px;
+      /* Desktop size overrides - apply Q-Size classes */
+      .card.q-width-450 {
+        width: 450px !important;
       }
 
-      .form-input {
-        height: 50px; /* All Devices: 50px */
+      .card.q-min-h-600 {
+        min-height: 600px !important;
       }
 
-      .btn-primary {
-        height: 60px; /* 12x = 60px (5px * 12) */
+      .card.q-max-h-720 {
+        max-height: 720px !important;
       }
 
-      .btn-secondary {
-        height: 60px; /* 12x = 60px (5px * 12) */
+      .card.q-p-40 {
+        padding: 40px !important;
+      }
+
+      .card.q-rounded-32 {
+        border-radius: 32px !important;
       }
 
       .actions {
@@ -450,8 +440,8 @@ export class UiAuthLoginScn extends LitElement {
   // 🏙️ Render
   render() {
     return html`
-      <div class="container">
-        <div class="card q-flex-parent-column q-flex-parent-column-space-between q-gap-05x q-w-full q-flex-grow q-min-h-0">
+      <div class="container q-p-24">
+        <div class="card q-flex-parent-column q-flex-parent-column-space-between q-gap-05x q-w-full q-flex-grow q-min-h-0 q-rounded-16 q-border-1 q-width-450 q-min-h-600 q-max-h-720 q-p-40 q-rounded-32">
           ${this._renderBlockA()}
           ${this._renderBlockB()}
           ${this._renderBlockZ()}
@@ -465,7 +455,7 @@ export class UiAuthLoginScn extends LitElement {
     return html`
       <div class="block-a q-flex-child-column q-flex-child-column-center q-w-full q-flex-shrink-0">
         <div class="logo">
-          <img src="${logoUrl}" alt="TN Logo" />
+          <img src="${logoUrl}" alt="TN Logo" class="q-width-125 q-height-125" />
         </div>
         <p class="subtitle">${this.t('subtitle')}</p>
       </div>
@@ -508,10 +498,10 @@ export class UiAuthLoginScn extends LitElement {
       <div class="form-group q-flex-child-column q-gap-02x">
         <label class="form-label ${hasError ? 'error' : ''}">${this.t('usernameLabel')}</label>
         <div class="input-wrapper">
-          <span class="input-icon">person</span>
+          <span class="input-icon q-left-12">person</span>
           <input
             id="username-input"
-            class="form-input ${this.usr_name ? 'has-suffix' : ''}"
+            class="form-input q-height-50 q-py-12 q-px-40 q-rounded-8 ${this.usr_name ? 'q-pr-80' : ''}"
             type="text"
             .value="${this.usr_name}"
             @input="${(e: Event) => {
@@ -537,16 +527,16 @@ export class UiAuthLoginScn extends LitElement {
       <div class="form-group q-flex-child-column q-gap-02x">
         <label class="form-label ${hasError ? 'error' : ''}">${this.t('passwordLabel')}</label>
         <div class="input-wrapper">
-          <span class="input-icon">lock</span>
+          <span class="input-icon q-left-12">lock</span>
           <input
             id="password-input"
-            class="form-input ${this.pwd ? 'has-double-suffix' : ''}"
+            class="form-input q-height-50 q-py-12 q-px-40 q-rounded-8 ${this.pwd ? 'q-pr-100' : ''}"
             type="${this.show_password ? 'text' : 'password'}"
             .value="${this.pwd}"
             @input="${(e: Event) => {
         this.pwd = (e.target as HTMLInputElement).value;
-        // Clear error khi user nhập đúng
-        if (this.pwd_error && this.pwd.trim().length >= 6) {
+        // Clear error khi user nhập đúng (không trim() vì password có thể có khoảng trắng hợp lệ)
+        if (this.pwd_error && this.pwd.length >= 3) {
           this.pwd_error = '';
         }
       }}"
@@ -561,9 +551,9 @@ export class UiAuthLoginScn extends LitElement {
   // ✕ Render Username Suffix (Clear button)
   private _renderUsernameSuffix() {
     return html`
-      <div class="input-suffix">
+      <div class="input-suffix q-right-12">
         <button
-          class="suffix-btn"
+          class="suffix-btn q-p-4"
           @click="${() => {
         this.usr_name = '';
       }}"
@@ -580,9 +570,9 @@ export class UiAuthLoginScn extends LitElement {
   // 👁️ Render Password Suffix (Toggle visibility & Clear)
   private _renderPasswordSuffix() {
     return html`
-      <div class="input-suffix">
+      <div class="input-suffix q-right-12 q-gap-8">
         <button
-          class="suffix-btn"
+          class="suffix-btn q-p-4"
           @click="${() => {
         this.show_password = !this.show_password;
       }}"
@@ -593,7 +583,7 @@ export class UiAuthLoginScn extends LitElement {
           👁️
         </button>
         <button
-          class="suffix-btn"
+          class="suffix-btn q-p-4"
           @click="${() => {
         this.pwd = '';
       }}"
@@ -641,16 +631,16 @@ export class UiAuthLoginScn extends LitElement {
   // 🔘 Render Buttons Row
   private _renderButtonsRow() {
     return html`
-      <div class="buttons-row">
+      <div class="buttons-row q-gap-16">
         <button
-          class="btn-secondary"
+          class="btn-secondary q-height-60 q-rounded-24 q-border-2"
           ?disabled="${this.is_loading}"
           @click="${this._onTrialClick}"
         >
           ${this.t('trialBtn')}
         </button>
         <button
-          class="btn-primary"
+          class="btn-primary q-height-60 q-rounded-24"
           ?disabled="${this.is_loading}"
           @click="${this._onLoginClick}"
         >
@@ -674,13 +664,13 @@ export class UiAuthLoginScn extends LitElement {
   private _renderBlockZ() {
     return html`
       <div class="block-z q-flex-child-column q-flex-child-column-center q-w-full q-flex-shrink-0">
-        <div class="footer">
+        <div class="footer q-gap-8 q-pt-24">
           <div class="footer-version">© 2026 QueenCode - v1.0.0</div>
-          <div class="footer-support">
+          <div class="footer-support q-gap-4">
             <span>📞</span>
             <span>${this.t('hotline')}</span>
           </div>
-          <div class="footer-lang">
+          <div class="footer-lang q-gap-8 q-mt-4">
             <span 
               class="lang-flag ${this.language === 'vi' ? 'active' : ''}" 
               title="Tiếng Việt"
@@ -718,12 +708,13 @@ export class UiAuthLoginScn extends LitElement {
     }
 
     // Validate password
-    if (!this.pwd || this.pwd.trim().length === 0) {
+    // Password không nên trim() vì có thể có khoảng trắng hợp lệ, nhưng cần check empty
+    if (!this.pwd || this.pwd.length === 0) {
       this.pwd_error = this.language === 'vi' ? 'Vui lòng nhập mật khẩu' : 'Please enter password';
       isValid = false;
       if (!firstErrorField) firstErrorField = 'password';
-    } else if (this.pwd.trim().length < 6) {
-      this.pwd_error = this.language === 'vi' ? 'Mật khẩu phải có ít nhất 6 ký tự' : 'Password must be at least 6 characters';
+    } else if (this.pwd.length < 3) {
+      this.pwd_error = this.language === 'vi' ? 'Mật khẩu phải có ít nhất 3 ký tự' : 'Password must be at least 3 characters';
       isValid = false;
       if (!firstErrorField) firstErrorField = 'password';
     }
@@ -770,10 +761,17 @@ export class UiAuthLoginScn extends LitElement {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : this.t('loginFailed');
       this.errorMessage = errorMsg; // Giữ lại để tương thích
+      
+      // Clear validation errors trước khi hiển thị API error
+      this.usr_name_error = '';
+      this.pwd_error = '';
+      
       // Hiển thị Toast thay vì error message inline
       toast.error(errorMsg);
       
-      // Focus vào password input sau khi Toast hiển thị (vì thường là lỗi mật khẩu)
+      // Nếu lỗi liên quan đến mật khẩu (từ API), không set pwd_error state
+      // vì đây là lỗi API, không phải validation error
+      // Chỉ focus vào password input để user có thể nhập lại
       this._focusInput('password');
     } finally {
       this.is_loading = false;
