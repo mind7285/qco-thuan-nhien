@@ -1,0 +1,16 @@
+node_modules
+.git
+.vscode
+.cursor
+*.log
+tmp/
+cmd/
+internal/
+pkg/
+Makefile
+go.mod
+go.sum
+README.md
+Dockerfile
+docker-compose.yml
+

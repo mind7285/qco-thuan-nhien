@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  tn-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tn-web-service
+    ports:
+      - "80:80"
+    restart: always
+    networks:
+      - db_qc_arc_net
+
+networks:
+  db_qc_arc_net:
+    external: true
+

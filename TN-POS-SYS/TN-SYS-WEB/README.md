@@ -109,3 +109,4 @@ const apiClient = new Api_Client('http://localhost:3000');
    - Chạy `npm run type-check` để kiểm tra lỗi
    - Đảm bảo `tsconfig.json` được cấu hình đúng
 
+docker compose up -d --build

@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  tn-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tn-api-service
+    ports:
+      - "3000:3000"
+    restart: always
+    environment:
+      - SERVER_PORT=3000
+      - DATABASE_HOST=${DB_HOST:-qc_db_pg} # Mặc định dùng IP cũ nếu không truyền DB_HOST 103.216.119.162
+      - DATABASE_PORT=5432
+      - DATABASE_USER=qc_thuan_nhien_app
+      - DATABASE_PASSWORD=TN@2026
+      - DATABASE_DBNAME=qc_thuan_nhien_db
+    networks:
+      - db_qc_arc_net
+
+networks:
+  db_qc_arc_net:
+    external: true
+

@@ -160,3 +160,15 @@ Xem chi tiết trong Swagger documentation: `http://localhost:3000/swagger/index
 4. **Lỗi port đã được sử dụng:**
    - Đổi port trong `config/config.yaml`
    - Hoặc kill process đang dùng port 3000
+
+## Deploy
+
+   sudo ufw allow 3000
+   Upload
+      tn-api
+      config/
+      Dockerfile
+      docker-compose.yml
+   GOOS=linux GOARCH=amd64 go build -o tn-api ./cmd/server/main.go
+   docker compose up -d --build
+   docker compose logs -f tn-api

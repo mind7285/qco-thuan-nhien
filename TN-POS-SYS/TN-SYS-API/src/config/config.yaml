@@ -3,7 +3,8 @@ server:
   host: "0.0.0.0"
 
 database:
-  host: "103.216.119.162"
+  #host: "103.216.119.162"
+  host: "qc_db_pg"
   port: "5432"
   user: "qc_thuan_nhien_app"
   password: "TN@2026"
