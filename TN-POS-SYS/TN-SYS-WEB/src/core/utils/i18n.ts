@@ -5,6 +5,15 @@ export type Language = 'vi' | 'en';
 // 🌐 Translations cho toàn bộ ứng dụng
 export const translations = {
   vi: {
+    // Common
+    common: {
+      loading: 'Đang tải',
+      save: 'Lưu',
+      cancel: 'Hủy',
+      delete: 'Xóa',
+      edit: 'Sửa',
+      add: 'Thêm',
+    },
     // Dashboard
     dashboard: {
       welcome: 'Chào mừng đến với TN POS System',
@@ -13,8 +22,50 @@ export const translations = {
     // Shell
     shell: {
       defaultTitle: '🏠 Hệ thống POS',
-      logout: 'Đăng xuất',
+      logout: '🚪 Đăng xuất',
       logoutConfirm: 'Bạn có chắc muốn đăng xuất?',
+      toggleMenu: 'Ẩn/Hiện menu',
+      welcome: 'Xin chào',
+      branch: 'Chi nhánh',
+      trialBadge: 'Dùng thử',
+      realBadge: 'Chính thức',
+    },
+    // Dialog
+    dialog: {
+      confirmTitle: 'Xác nhận',
+      confirmDelete: 'Bạn có chắc muốn xóa?',
+      yes: 'Đồng ý',
+      no: 'Hủy bỏ',
+    },
+    // Org module
+    org: {
+      hierarchy: 'Sơ đồ tổ chức',
+      userAssignment: 'Phân bổ nhân sự',
+      company: 'Công ty',
+      region: 'Khu vực',
+      branch: 'Chi nhánh',
+      department: 'Phòng ban',
+      selectUser: 'Chọn nhân viên',
+      assignedBranches: 'Chọn chi nhánh làm việc',
+      isDefault: 'Mặc định',
+      saveAssignment: 'Cập nhật phân bổ',
+      assignmentSuccess: 'Phân bổ nhân sự thành công',
+    },
+    // Auth features
+    auth: {
+      username: 'Tên đăng nhập',
+      fullName: 'Họ tên',
+      password: 'Mật khẩu',
+      changePwd: 'Đổi mật khẩu',
+      oldPwd: 'Mật khẩu cũ',
+      newPwd: 'Mật khẩu mới',
+      confirmPwd: 'Xác nhận mật khẩu mới',
+      success: 'Đổi mật khẩu thành công',
+      error: 'Đổi mật khẩu thất bại',
+      pwdMaxLength: 'Mật khẩu chỉ được phép tối đa 3 ký tự',
+      submitting: 'Đang xử lý...',
+      submit: 'CẬP NHẬT',
+      cancel: 'HỦY',
     },
     // Modules (Menu items)
     modules: {
@@ -36,6 +87,10 @@ export const translations = {
       'rpt-sales': '📈 Doanh thu & Lợi nhuận',
       'rpt-inv': '📉 Báo cáo tồn kho',
       'rpt-staff': '👨‍💼 Báo cáo nhân viên',
+      org: '🏢 Quản lý tổ chức',
+      'org-manage': '📋 Danh mục tổ chức',
+      'org-hierarchy': '🌳 Sơ đồ phân cấp',
+      'org-user-assignment': '👥 Phân bổ nhân sự',
       cfg: '⚙️ Hệ thống',
       'cfg-gen': '🏪 Thông tin cửa hàng',
       'cfg-ui': '🎨 Giao diện',
@@ -51,6 +106,15 @@ export const translations = {
     },
   },
   en: {
+    // Common
+    common: {
+      loading: 'Loading',
+      save: 'Save',
+      cancel: 'Cancel',
+      delete: 'Delete',
+      edit: 'Edit',
+      add: 'Add',
+    },
     // Dashboard
     dashboard: {
       welcome: 'Welcome to TN POS System',
@@ -59,8 +123,50 @@ export const translations = {
     // Shell
     shell: {
       defaultTitle: '🏠 POS System',
-      logout: 'Logout',
+      logout: '🚪 Logout',
       logoutConfirm: 'Are you sure you want to logout?',
+      toggleMenu: 'Toggle menu',
+      welcome: 'Welcome',
+      branch: 'Branch',
+      trialBadge: 'Trial',
+      realBadge: 'Official',
+    },
+    // Dialog
+    dialog: {
+      confirmTitle: 'Confirmation',
+      confirmDelete: 'Are you sure you want to delete?',
+      yes: 'Yes',
+      no: 'Cancel',
+    },
+    // Org module
+    org: {
+      hierarchy: 'Org Hierarchy',
+      userAssignment: 'User Assignment',
+      company: 'Company',
+      region: 'Region',
+      branch: 'Branch',
+      department: 'Department',
+      selectUser: 'Select Employee',
+      assignedBranches: 'Select working branch',
+      isDefault: 'Default',
+      saveAssignment: 'Save Assignment',
+      assignmentSuccess: 'Assignment updated successfully',
+    },
+    // Auth features
+    auth: {
+      username: 'Username',
+      fullName: 'Full Name',
+      password: 'Password',
+      changePwd: 'Change Password',
+      oldPwd: 'Old Password',
+      newPwd: 'New Password',
+      confirmPwd: 'Confirm New Password',
+      success: 'Password changed successfully',
+      error: 'Failed to change password',
+      pwdMaxLength: 'Password must be maximum 3 characters',
+      submitting: 'Processing...',
+      submit: 'UPDATE',
+      cancel: 'CANCEL',
     },
     // Modules (Menu items)
     modules: {
@@ -82,6 +188,10 @@ export const translations = {
       'rpt-sales': '📈 Sales & Profit',
       'rpt-inv': '📉 Inventory Reports',
       'rpt-staff': '👨‍💼 Staff Reports',
+      org: '🏢 Organization',
+      'org-manage': '📋 Org Management',
+      'org-hierarchy': '🌳 Org Hierarchy',
+      'org-user-assignment': '👥 User Assignment',
       cfg: '⚙️ System',
       'cfg-gen': '🏪 Store Info',
       'cfg-ui': '🎨 Interface',

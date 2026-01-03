@@ -449,6 +449,7 @@ BEGIN
         SET c_full_name = p_full_name,
             c_email = p_email,
             c_phone = p_phone,
+            c_pwd_hash = COALESCE(NULLIF(p_pwd_hash, ''), c_pwd_hash),
             q_updated_via = p_via,
             q_updated_by = p_by,
             q_updated_at = (extract(epoch from now()) * 1000)::BIGINT

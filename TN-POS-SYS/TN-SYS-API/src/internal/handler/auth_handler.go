@@ -8,16 +8,21 @@ import (
 	"tn-pos-sys-api/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 // AuthHandler Auth handler
 type AuthHandler struct {
-	service *service.S_Api_Auth
+	service    *service.S_Api_Auth
+	orgService *service.S_Api_Org
 }
 
 // NewAuthHandler Tạo handler mới
-func NewAuthHandler(s *service.S_Api_Auth) *AuthHandler {
-	return &AuthHandler{service: s}
+func NewAuthHandler(s *service.S_Api_Auth, orgS *service.S_Api_Org) *AuthHandler {
+	return &AuthHandler{
+		service:    s,
+		orgService: orgS,
+	}
 }
 
 // Api_Auth_Usr_Login POST /auth/login
@@ -45,15 +50,24 @@ func (h *AuthHandler) Api_Auth_Usr_Login(c *fiber.Ctx) error {
 		return utils.SendUnauthorized(c, err.Error())
 	}
 
+	// 4. Lấy thông tin chi nhánh mặc định
+	usrUUID, _ := uuid.Parse(usr.QID)
+	branch, _ := h.orgService.GetDefaultBranch(usrUUID)
+
 	// Trả về session token và user info trong response, kèm thông tin chi nhánh mặc định
-	return utils.SendSuccess(c, map[string]interface{}{
+	resp := map[string]interface{}{
 		"user":  usr,
 		"token": ses.CSesToken,
-		"branch": map[string]string{
-			"id":   "9a1b2c3d-4e5f-6789-abcd-ef0123456789",
-			"name": "Vũng Tàu",
-		},
-	})
+	}
+
+	if branch != nil {
+		resp["branch"] = map[string]string{
+			"id":   branch.QID,
+			"name": branch.CBrhName,
+		}
+	}
+
+	return utils.SendSuccess(c, resp)
 }
 
 // Api_Auth_Usr_Logout POST /auth/logout

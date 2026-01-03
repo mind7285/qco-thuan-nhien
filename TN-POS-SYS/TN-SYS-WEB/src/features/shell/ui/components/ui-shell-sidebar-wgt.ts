@@ -205,7 +205,7 @@ export class UiShellSidebarWgt extends LitElement {
       { label: this.language === 'vi' ? 'Bàn làm việc' : 'Workspace', mods: topLevelModules.filter(m => m.c_mod_id === 'dashboard') },
       { label: this.language === 'vi' ? 'Nghiệp vụ' : 'Operations', mods: topLevelModules.filter(m => ['pos', 'inv', 'crm'].includes(m.c_mod_id)) },
       { label: this.language === 'vi' ? 'Thống kê' : 'Statistics', mods: topLevelModules.filter(m => ['rpt-sales', 'rpt-inv', 'rpt-staff'].includes(m.c_mod_id)) },
-      { label: this.language === 'vi' ? 'Cấu hình' : 'Settings', mods: topLevelModules.filter(m => ['cfg-gen', 'auth', 'cfg-ui', 'sys-logs'].includes(m.c_mod_id)) },
+      { label: this.language === 'vi' ? 'Cấu hình' : 'Settings', mods: topLevelModules.filter(m => ['cfg-gen', 'org', 'auth', 'cfg-ui', 'sys-logs'].includes(m.c_mod_id)) },
     ];
 
     return html`

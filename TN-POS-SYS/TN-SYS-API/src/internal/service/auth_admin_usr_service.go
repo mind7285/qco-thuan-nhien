@@ -41,6 +41,17 @@ func (s *S_Api_Auth_Adm_Usr) GetList() ([]auth.M_Tb_Auth_Usr, error) {
 func (s *S_Api_Auth_Adm_Usr) Upsert(usr *auth.M_Tb_Auth_Usr) (string, error) {
 	var usrID string
 
+	// 💫 Hash mật khẩu nếu có thay đổi/tạo mới
+	pwdHash := usr.CPwdHash
+	if pwdHash != "" {
+		hash, err := utils.HashPassword(pwdHash)
+		if err != nil {
+			s.logger.Error("Failed to hash password", zap.Error(err))
+			return "", err
+		}
+		pwdHash = hash
+	}
+
 	// Nếu QID rỗng thì dùng NULL
 	var usrIDParam interface{} = nil
 	if usr.QID != "" {
@@ -51,7 +62,7 @@ func (s *S_Api_Auth_Adm_Usr) Upsert(usr *auth.M_Tb_Auth_Usr) (string, error) {
 		"SELECT auth.qsp_usr_upsert($1, $2, $3, $4, $5, $6, $7, $8)",
 		usrIDParam,
 		usr.CUsrName,
-		usr.CPwdHash,
+		pwdHash,
 		usr.CFullName,
 		usr.CEmail,
 		usr.CPhone,

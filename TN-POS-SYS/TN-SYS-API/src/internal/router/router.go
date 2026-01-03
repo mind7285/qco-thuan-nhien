@@ -22,15 +22,17 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	authAdminUsrService := service.NewAuthAdminUsrService(db)
 	authAdminRoleService := service.NewAuthAdminRoleService(db)
 	authAdminPermService := service.NewAuthAdminPermService(db)
+	orgService := service.NewOrgService(db)
 
 	// Handlers
 	shellHandler := handler.NewShellHandler(shellService)
-	authHandler := handler.NewAuthHandler(authService)
+	authHandler := handler.NewAuthHandler(authService, orgService)
 	authAdminHandler := handler.NewAuthAdminHandler(
 		authAdminUsrService,
 		authAdminRoleService,
 		authAdminPermService,
 	)
+	orgHandler := handler.NewOrgHandler(orgService)
 
 	// Middleware
 	authMiddleware := middleware.AuthMiddleware(db)
@@ -108,4 +110,19 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	// Permission management
 	authAdmin.Get("/perms", authAdminHandler.Api_Auth_Perm_Get_List)   // Auth: Required
 	authAdmin.Post("/perms/sync", authAdminHandler.Api_Auth_Perm_Sync) // Auth: Required
+
+	// Organization routes (Protected)
+	org := api.Group("/org", authMiddleware)
+	org.Get("/hierarchy", orgHandler.Api_Org_Get_Hierarchy)
+	org.Get("/companies", orgHandler.Api_Org_Get_Companies)
+	org.Post("/companies", orgHandler.Api_Org_Cpy_Upsert)
+	org.Get("/regions", orgHandler.Api_Org_Get_Regions)
+	org.Post("/regions", orgHandler.Api_Org_Reg_Upsert)
+	org.Get("/branches", orgHandler.Api_Org_Get_Branches)
+	org.Post("/branches", orgHandler.Api_Org_Brh_Upsert)
+	org.Get("/departments", orgHandler.Api_Org_Get_Departments)
+	org.Post("/departments", orgHandler.Api_Org_Dep_Upsert)
+	org.Delete("/:table/:id", orgHandler.Api_Org_Entity_Delete)
+	org.Get("/user-branch/:usrId", orgHandler.Api_Org_Usr_Brh_Get)
+	org.Post("/user-branch/assign", orgHandler.Api_Org_Usr_Brh_Assign)
 }

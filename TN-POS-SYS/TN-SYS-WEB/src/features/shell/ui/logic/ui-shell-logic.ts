@@ -1,6 +1,7 @@
 // 🇻🇳 Logic xử lý nghiệp vụ cho Shell
 // 🇺🇸 Business logic handler for Shell
 import { getLanguage, t } from '@/core/utils/i18n';
+import { confirmDialog } from '@/core/utils/dialog';
 import type { UiShellScn } from '../screens/ui-shell-scn';
 
 export class Ui_Shell_Logic {
@@ -31,8 +32,7 @@ export class Ui_Shell_Logic {
   // ⚡️ Xử lý đăng xuất
   async handleLogout(): Promise<void> {
     // 💫 1. Hiển thị hộp thoại xác nhận
-    const confirmMsg = t('shell.logoutConfirm');
-    const confirmed = window.confirm(confirmMsg);
+    const confirmed = await confirmDialog(t('shell.logoutConfirm'));
     if (!confirmed) return;
 
     try {

@@ -4,11 +4,14 @@ import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { Ui_Auth_Logic } from '../logic/ui-auth-logic';
 import type { M_Tb_Auth_Usr } from '../../data/models';
+import { useI18n } from '@/core/utils/i18n';
+import { qThemeStyles } from '@/core/styles/q-theme';
 
 @customElement('ui-auth-register-scn')
 export class UiAuthRegisterScn extends LitElement {
   // 🔌 Logic Binding
   private _logic: Ui_Auth_Logic = new Ui_Auth_Logic();
+  private i18n = useI18n();
 
   // 🍃 Internal State
   @state() usr_name: string = '';
@@ -18,8 +21,10 @@ export class UiAuthRegisterScn extends LitElement {
   @state() is_loading: boolean = false;
   @state() errorMessage: string = '';
 
-  // 🎨 Styles (tương tự Login)
-  static styles = css`
+  // 🎨 Styles
+  static styles = [
+    qThemeStyles,
+    css`
     :host {
       display: block;
       width: 100%;
@@ -32,16 +37,17 @@ export class UiAuthRegisterScn extends LitElement {
       justify-content: center;
       min-height: 100vh;
       padding: 24px;
-      background-color: #f5f5f5;
+      background-color: var(--q-color-bg-secondary);
     }
 
     .card {
       width: 100%;
       max-width: 400px;
-      background: white;
-      border-radius: 8px;
+      background: var(--q-color-bg-primary);
+      border-radius: var(--q-radius-lg);
       padding: 40px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--q-shadow-xl);
+      border: 1px solid var(--q-color-border);
     }
 
     .title {
@@ -49,7 +55,7 @@ export class UiAuthRegisterScn extends LitElement {
       font-size: 24px;
       font-weight: 600;
       margin-bottom: 32px;
-      color: #333;
+      color: var(--q-color-text-primary);
     }
 
     .form-group {
@@ -60,38 +66,41 @@ export class UiAuthRegisterScn extends LitElement {
       display: block;
       margin-bottom: 8px;
       font-weight: 500;
-      color: #333;
+      color: var(--q-color-text-primary);
     }
 
     .form-input {
       width: 100%;
       padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      border: 1px solid var(--q-color-border);
+      border-radius: var(--q-radius-md);
       font-size: 16px;
       box-sizing: border-box;
+      background: var(--q-color-bg-secondary);
+      color: var(--q-color-text-primary);
     }
 
     .form-input:focus {
       outline: none;
-      border-color: #007bff;
+      border-color: var(--q-color-primary);
     }
 
     .btn-success {
       width: 100%;
       padding: 14px;
-      background-color: #28a745;
+      background-color: var(--q-color-success);
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: var(--q-radius-md);
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
       margin-top: 8px;
+      transition: opacity 0.2s;
     }
 
     .btn-success:hover:not(:disabled) {
-      background-color: #218838;
+      opacity: 0.9;
     }
 
     .btn-success:disabled {
@@ -100,7 +109,7 @@ export class UiAuthRegisterScn extends LitElement {
     }
 
     .link {
-      color: #007bff;
+      color: var(--q-color-primary);
       text-decoration: none;
       cursor: pointer;
       font-size: 14px;
@@ -113,8 +122,8 @@ export class UiAuthRegisterScn extends LitElement {
       text-decoration: underline;
     }
 
-    .error {
-      color: #dc3545;
+    .error-msg {
+      color: var(--q-color-error);
       font-size: 14px;
       margin-top: 8px;
       text-align: center;
@@ -123,23 +132,16 @@ export class UiAuthRegisterScn extends LitElement {
     @media (max-width: 768px) {
       .container {
         padding: 24px;
-        background-color: white;
+        background-color: var(--q-color-bg-primary);
       }
 
       .card {
         box-shadow: none;
         padding: 24px;
-      }
-
-      .form-input {
-        padding: 14px;
-      }
-
-      .btn-success {
-        padding: 16px;
+        border: none;
       }
     }
-  `;
+  `];
 
   // 🏙️ Render
   render() {
@@ -148,7 +150,7 @@ export class UiAuthRegisterScn extends LitElement {
         <div class="card">
           <h2 class="title">Đăng ký tài khoản</h2>
 
-          ${this.errorMessage ? html`<div class="error">${this.errorMessage}</div>` : ''}
+          ${this.errorMessage ? html`<div class="error-msg">${this.errorMessage}</div>` : ''}
 
           <div class="form-group">
             <label class="form-label">Họ và tên</label>
@@ -198,7 +200,7 @@ export class UiAuthRegisterScn extends LitElement {
               @input="${(e: Event) => {
                 this.pwd = (e.target as HTMLInputElement).value;
               }}"
-              placeholder="Nhập mật khẩu"
+              placeholder="•••"
             />
           </div>
 

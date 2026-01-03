@@ -157,12 +157,19 @@ func (s *S_Api_Auth) Logout(sesToken string) (bool, error) {
 func (s *S_Api_Auth) Register(usr *auth.M_Tb_Auth_Usr) (string, error) {
 	var usrID string
 
+	// 💫 Hash mật khẩu
+	pwdHash, err := utils.HashPassword(usr.CPwdHash)
+	if err != nil {
+		s.logger.Error("Failed to hash password", zap.Error(err))
+		return "", err
+	}
+
 	// Gọi stored procedure với NULL cho UUID
-	err := s.db.Raw(
+	err = s.db.Raw(
 		"SELECT auth.qsp_usr_upsert($1, $2, $3, $4, $5, $6, $7, $8)",
 		nil, // p_usr_id (NULL for insert)
 		usr.CUsrName,
-		usr.CPwdHash,
+		pwdHash,
 		usr.CFullName,
 		usr.CEmail,
 		usr.CPhone,

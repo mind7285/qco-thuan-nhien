@@ -51,10 +51,13 @@ export class UiShellScn extends LitElement {
     }
 
     .sidebar-container {
-      transition: transform 0.3s ease;
+      transition: width 0.3s ease, transform 0.3s ease;
+      width: 300px;
+      overflow: hidden;
     }
 
     .sidebar-container.closed {
+      width: 0;
       transform: translateX(-100%);
     }
 
@@ -157,6 +160,8 @@ export class UiShellScn extends LitElement {
           .userName="${this.userData?.c_full_name || ''}"
           .branchName="${this.branchData?.name || ''}"
           @logout="${this._onLogout}"
+          @toggle-sidebar="${this._onToggleSidebar}"
+          @branch-changed="${this._onBranchChanged}"
         ></ui-shell-header-wgt>
 
         <!-- Body -->
@@ -182,12 +187,22 @@ export class UiShellScn extends LitElement {
   }
 
   // 🎨 Events
+  private _onToggleSidebar() {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
   private _onModClick(e: CustomEvent<{ modId: string }>) {
     this._logic.handleNav(e.detail.modId);
   }
 
   private _onLogout() {
     this._logic.handleLogout();
+  }
+
+  private _onBranchChanged(e: CustomEvent<{ id: string; name: string }>) {
+    this.branchData = e.detail;
+    // 💫 Reload lại trang để các module cập nhật dữ liệu theo chi nhánh mới
+    window.location.reload();
   }
 
   // 💎 Helper

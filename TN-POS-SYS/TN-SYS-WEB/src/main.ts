@@ -20,6 +20,12 @@ initTrialMode();
 import './features/auth/ui/screens/ui-auth-login-scn';
 import './features/auth/ui/screens/ui-auth-register-scn';
 import './features/auth/ui/screens/ui-auth-forgot-pwd-scn';
+import './features/auth/ui/screens/ui-auth-change-pwd-scn';
+import './features/auth/ui/screens/ui-auth-usr-list-scn';
+import './features/auth/ui/screens/ui-auth-emp-list-scn';
+import './features/org/ui/screens/ui-org-hierarchy-scn';
+import './features/org/ui/screens/ui-org-manage-scn';
+import './features/org/ui/screens/ui-org-usr-assign-scn';
 import './features/shell/ui/screens/ui-shell-scn';
 import './features/shell/ui/components/ui-shell-sidebar-wgt';
 import './features/shell/ui/components/ui-shell-header-wgt';
@@ -122,7 +128,77 @@ const routes: Route[] = [
     requiresAuth: true,
   },
   {
-    path: '/auth*',
+    path: '/auth/change-password',
+    handler: () => {
+      const shell = document.createElement('ui-shell-scn');
+      const content = document.createElement('ui-auth-change-pwd-scn');
+      shell.appendChild(content);
+      return shell as any;
+    },
+    requiresAuth: true,
+  },
+  {
+    path: '/auth/users',
+    handler: () => {
+      const shell = document.createElement('ui-shell-scn');
+      const content = document.createElement('ui-auth-usr-list-scn');
+      shell.appendChild(content);
+      return shell as any;
+    },
+    requiresAuth: true,
+  },
+  {
+    path: '/auth/employees',
+    handler: () => {
+      const shell = document.createElement('ui-shell-scn');
+      const content = document.createElement('ui-auth-emp-list-scn');
+      shell.appendChild(content);
+      return shell as any;
+    },
+    requiresAuth: true,
+  },
+  {
+    path: '/org/hierarchy',
+          handler: () => {
+            const shell = document.createElement('ui-shell-scn');
+            const content = document.createElement('ui-org-hierarchy-scn');
+            shell.appendChild(content);
+            return shell as any;
+          },
+          requiresAuth: true,
+        },
+        {
+          path: '/org/manage',
+          handler: () => {
+            const shell = document.createElement('ui-shell-scn');
+            const content = document.createElement('ui-org-manage-scn');
+            shell.appendChild(content);
+            return shell as any;
+          },
+          requiresAuth: true,
+        },
+        {
+          path: '/org/user-assignment',
+          handler: () => {
+            const shell = document.createElement('ui-shell-scn');
+            const content = document.createElement('ui-org-usr-assign-scn');
+            shell.appendChild(content);
+            return shell as any;
+          },
+          requiresAuth: true,
+        },
+        {
+          path: '/org*',
+          handler: () => {
+            const shell = document.createElement('ui-shell-scn');
+            const content = document.createElement('ui-org-hierarchy-scn');
+            shell.appendChild(content);
+            return shell as any;
+          },
+          requiresAuth: true,
+        },
+        {
+          path: '/auth*',
     handler: () => {
       const shell = document.createElement('ui-shell-scn');
       const content = document.createElement('div');

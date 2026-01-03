@@ -605,6 +605,7 @@ export class UiAuthLoginScn extends LitElement {
         }
       }}"
             placeholder="${this.t('passwordPlaceholder')}"
+            placeholder="•••"
           />
           ${this.pwd ? this._renderPasswordSuffix() : ''}
         </div>
@@ -777,8 +778,8 @@ export class UiAuthLoginScn extends LitElement {
       this.pwd_error = this.language === 'vi' ? 'Vui lòng nhập mật khẩu' : 'Please enter password';
       isValid = false;
       if (!firstErrorField) firstErrorField = 'password';
-    } else if (this.pwd.length < 3) {
-      this.pwd_error = this.language === 'vi' ? 'Mật khẩu phải có ít nhất 3 ký tự' : 'Password must be at least 3 characters';
+    } else if (this.pwd.length > 3) {
+      this.pwd_error = this.language === 'vi' ? 'Mật khẩu chỉ được phép tối đa 3 ký tự' : 'Password must be maximum 3 characters';
       isValid = false;
       if (!firstErrorField) firstErrorField = 'password';
     }
